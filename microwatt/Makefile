@@ -1,0 +1,49 @@
+ARCH = $(shell uname -m)
+ifneq ("$(ARCH)", "ppc64")
+ifneq ("$(ARCH)", "ppc64le")
+	#CROSS_COMPILE = powerpc64le-linux-
+	CROSS_COMPILE = /usr/local/powerpc64le-power8--glibc--bleeding-edge-2018.11-1/bin/powerpc64le-linux-
+endif
+endif
+
+CC = $(CROSS_COMPILE)gcc
+LD = $(CROSS_COMPILE)ld
+OBJCOPY = $(CROSS_COMPILE)objcopy
+
+GIT_VERSION := "$(shell git describe --dirty --always --tags)"
+
+CFLAGS = -DVERSION=\"$(GIT_VERSION)\" -Os -g -Wall -msoft-float -mno-string -mno-multiple -mno-vsx -mno-altivec -mlittle-endian -fno-stack-protector -mstrict-align -ffreestanding -fdata-sections -ffunction-sections  -I../ -I../microrl
+ASFLAGS = $(CFLAGS)
+LDFLAGS = -N -T powerpc.lds
+
+all: simple_random.hex
+
+simple_random.o: ../simple_random.c ../generate.h ../backend.h ../jenkins.h ../microrl/microrl.h ../mystdio.h
+	$(CC) $(CFLAGS) -c $<
+
+lfsr.o: ../lfsr.c
+	$(CC) $(CFLAGS) -c $<
+
+generate.o: ../generate.c ../generate.h ../lfsr.h ../helpers.h
+	$(CC) $(CFLAGS) -c $<
+
+helpers.o: ../helpers.S ../helpers.h
+	$(CC) $(CFLAGS) -c $<
+
+mystdio.o: ../mystdio.c ../mystdio.h
+	$(CC) $(CFLAGS) -c $<
+
+microrl.o: ../microrl/microrl.c ../microrl/config.h ../microrl/microrl.h
+	$(CC) $(CFLAGS) -c $<
+
+simple_random.elf: simple_random.o lfsr.o generate.o head.o libc.o uart.o backend_microwatt.o helpers.o div_helpers.o microrl.o mystdio.o
+	$(LD) $(LDFLAGS) -o $@ $^
+
+simple_random.bin: simple_random.elf
+	$(OBJCOPY) -O binary $< $@
+
+simple_random.hex: simple_random.bin
+	./bin2hex.py $< > $@
+
+clean:
+	@rm -f *.o simple_random.elf simple_random.bin simple_random.hex
