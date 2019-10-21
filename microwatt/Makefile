@@ -36,7 +36,7 @@ mystdio.o: ../mystdio.c ../mystdio.h
 microrl.o: ../microrl/microrl.c ../microrl/config.h ../microrl/microrl.h
 	$(CC) $(CFLAGS) -c $<
 
-simple_random.elf: simple_random.o lfsr.o generate.o head.o libc.o uart.o backend_microwatt.o helpers.o div_helpers.o microrl.o mystdio.o
+simple_random.elf: simple_random.o lfsr.o generate.o head.o libc.o uart.o backend_microwatt.o helpers.o microrl.o mystdio.o
 	$(LD) $(LDFLAGS) -o $@ $^
 
 simple_random.bin: simple_random.elf
