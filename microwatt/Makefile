@@ -1,8 +1,7 @@
 ARCH = $(shell uname -m)
 ifneq ("$(ARCH)", "ppc64")
 ifneq ("$(ARCH)", "ppc64le")
-	#CROSS_COMPILE = powerpc64le-linux-
-	CROSS_COMPILE = /usr/local/powerpc64le-power8--glibc--bleeding-edge-2018.11-1/bin/powerpc64le-linux-
+	CROSS_COMPILE = powerpc64le-linux-gnu-
 endif
 endif
 
@@ -12,11 +11,20 @@ OBJCOPY = $(CROSS_COMPILE)objcopy
 
 GIT_VERSION := "$(shell git describe --dirty --always --tags)"
 
-CFLAGS = -DVERSION=\"$(GIT_VERSION)\" -Os -g -Wall -msoft-float -mno-string -mno-multiple -mno-vsx -mno-altivec -mlittle-endian -fno-stack-protector -mstrict-align -ffreestanding -fdata-sections -ffunction-sections  -I../ -I../microrl
+CFLAGS = -DVERSION=\"$(GIT_VERSION)\" -Os -g -Wall -msoft-float -mno-string -mno-multiple -mno-vsx -mno-altivec -mlittle-endian -fno-stack-protector -mstrict-align -ffreestanding -fdata-sections -ffunction-sections  -Ilibc/include -I../ -I../microrl
 ASFLAGS = $(CFLAGS)
 LDFLAGS = -N -T powerpc.lds
 
 all: simple_random.hex
+
+LIBC_SRC := $(wildcard libc/src/*.c)
+LIBC_OBJ := $(patsubst libc/src/%.c, libc/obj/%.o,$(LIBC_SRC))
+libc_objdir:
+	@mkdir -p libc/obj
+libc/obj/%.o: libc/src/%.c
+	$(CC) $(CFLAGS) -c $< -o $@
+libc.o: libc_objdir $(LIBC_OBJ)
+	$(LD)  -r -o $@ $(LIBC_OBJ)
 
 simple_random.o: ../simple_random.c ../generate.h ../backend.h ../jenkins.h ../microrl/microrl.h ../mystdio.h
 	$(CC) $(CFLAGS) -c $<
@@ -46,4 +54,4 @@ simple_random.hex: simple_random.bin
 	./bin2hex.py $< > $@
 
 clean:
-	@rm -f *.o simple_random.elf simple_random.bin simple_random.hex
+	@rm -f *.o simple_random.elf simple_random.bin simple_random.hex libc/obj/*
