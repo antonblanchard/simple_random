@@ -13,7 +13,7 @@ GIT_VERSION := "$(shell git describe --dirty --always --tags)"
 
 CFLAGS = -DVERSION=\"$(GIT_VERSION)\" -Os -g -Wall -msoft-float -mno-string -mno-multiple -mno-vsx -mno-altivec -mlittle-endian -fno-stack-protector -mstrict-align -ffreestanding -fdata-sections -ffunction-sections  -Ilibc/include -I../ -I../microrl
 ASFLAGS = $(CFLAGS)
-LDFLAGS = -N -T powerpc.lds
+LDFLAGS = -N -T powerpc.lds --gc-sections
 
 all: simple_random.hex
 
