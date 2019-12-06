@@ -517,10 +517,19 @@ void generate_testcase(void *ptr, void *mem, void *save, unsigned long seed,
 
 void enable_insn(const char *insn)
 {
+	size_t l;
+	bool wild = false;
+
+	l = strlen(insn);
+	if (l > 0 && insn[l-1] == '*') {
+		--l;
+		wild = true;
+	}
 	for (unsigned long i = 0; i < NR_INSNS; i++) {
-		if (!strcmp(insns[i].name, insn)) {
+		if (!insns[i].enabled && !strncmp(insns[i].name, insn, l) &&
+		    (wild || insn[l] == 0)) {
 			print("Enabling ");
-			print(insn);
+			print(insns[i].name);
 			print("\r\n");
 			insns[i].enabled = true;
 		}
@@ -529,10 +538,19 @@ void enable_insn(const char *insn)
 
 void disable_insn(const char *insn)
 {
+	size_t l;
+	bool wild = false;
+
+	l = strlen(insn);
+	if (l > 0 && insn[l-1] == '*') {
+		--l;
+		wild = true;
+	}
 	for (unsigned long i = 0; i < NR_INSNS; i++) {
-		if (!strcmp(insns[i].name, insn)) {
+		if (insns[i].enabled && !strncmp(insns[i].name, insn, l) &&
+		    (wild || insn[l] == 0)) {
 			print("Disabling ");
-			print(insn);
+			print(insns[i].name);
 			print("\r\n");
 			insns[i].enabled = false;
 		}
