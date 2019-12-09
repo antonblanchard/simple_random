@@ -18,32 +18,23 @@ void init_console(void)
 
 void *init_testcase(unsigned long max_insns)
 {
-	unsigned long sz;
 	void *p;
 
-	sz = ALIGN_UP(max_insns*sizeof(uint32_t), getpagesize());
-
-	p = mmap(NULL, sz, PROT_READ|PROT_WRITE|PROT_EXEC,
-		 MAP_PRIVATE|MAP_ANONYMOUS, -1, 0);
+	p = mmap((void *)MEMPAGE_BASE, MEMPAGE_SIZE, PROT_READ|PROT_WRITE|PROT_EXEC,
+		 MAP_PRIVATE|MAP_ANONYMOUS|MAP_FIXED, -1, 0);
 
 	if (p == MAP_FAILED) {
 		perror("mmap");
 		exit(1);
 	}
 
-	memset(p, 0, sz);
+	memset(p, 0, MEMPAGE_SIZE);
 
-	return p;
+	return (void *)INSNS_BASE;
 }
 
 void *init_memory(void)
 {
-	void *p = mmap((void *)MEM_BASE_ALIGNED, getpagesize(),
-		       PROT_READ|PROT_WRITE,
-		       MAP_FIXED|MAP_PRIVATE|MAP_ANONYMOUS, -1, 0);
-
-	assert(p != MAP_FAILED);
-
 	return (void *)MEM_BASE;
 }
 

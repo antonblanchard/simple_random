@@ -8,13 +8,9 @@ void init_console(void)
 	potato_uart_init();
 }
 
-#define ALIGN_UP(VAL, SIZE)	(((VAL) + ((SIZE)-1)) & ~((SIZE)-1))
-
-#define INSNS_START (32*1024)
-
 void *init_testcase(unsigned long max_insns)
 {
-	return (void *)INSNS_START;
+	return (void *)INSNS_BASE;
 }
 
 void *init_memory(void)

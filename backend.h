@@ -7,6 +7,10 @@ void execute_testcase(void *insn, void *gprs);
 void putchar_unbuffered(const char c);
 char getchar_unbuffered(void);
 
-#define MEM_BASE (96*1024)
-#define MEM_BASE_ALIGNED (64*1024)
+#define MEMPAGE_BASE (64*1024)
+#define MEMPAGE_SIZE (64*1024)
+
+#define INSNS_BASE (64*1024)
+
+#define MEM_BASE (112*1024)
 #define MEM_SIZE 64
