@@ -185,7 +185,7 @@ static struct insn insns[] = {
 	{ 0x7c000100, 0x03fff801, false, "setb"},
 
 	/* BC+8 */
-	{ 0x40000008, 0x03ff0000, true, "bc"},
+	{ 0x40000008, 0x03ff0001, true, "bc"},
 
 	/* CR logical ops */
 	{ 0x4c000202, 0x03fff801, false, "crand"},
