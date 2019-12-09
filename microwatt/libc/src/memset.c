@@ -18,6 +18,7 @@ void *memset(void *dest, int c, size_t size);
 void *memset(void *dest, int c, size_t size)
 {
 	unsigned char *d = (unsigned char *)dest;
+#if 0
 	unsigned long big_c = 0;
 
 	if (c) {
@@ -31,6 +32,7 @@ void *memset(void *dest, int c, size_t size)
 		d+=8;
 		size-=8;
 	}
+#endif
 
 	while (size-- > 0) {
 		*d++ = (unsigned char)c;
