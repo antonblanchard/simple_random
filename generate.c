@@ -53,6 +53,24 @@ static struct insn insns[] = {
 	{ 0x7c000191, 0x03fff800, true, "subfze_rc"},
 	{ 0x7c000154, 0x03fff801, false, "addex"},
 
+	/* Add/sub carry ops with OE=1 */
+	{ 0x7c000414, 0x03fff800, true, "addco"},
+	{ 0x7c000415, 0x03fff800, true, "addco_rc"},
+	{ 0x7c000594, 0x03fff800, true, "addzeo"},
+	{ 0x7c000595, 0x03fff800, true, "addzeo_rc"},
+	{ 0x7c000514, 0x03fff800, true, "addeo"},
+	{ 0x7c000515, 0x03fff800, true, "addeo_rc"},
+	{ 0x7c0005d4, 0x03fff800, true, "addmeo"},
+	{ 0x7c0005d5, 0x03fff800, true, "addmeo_rc"},
+	{ 0x7c000410, 0x03fff800, true, "subfco"},
+	{ 0x7c000411, 0x03fff800, true, "subfco_rc"},
+	{ 0x7c000510, 0x03fff800, true, "subfeo"},
+	{ 0x7c000511, 0x03fff800, true, "subfeo_rc"},
+	{ 0x7c0005d0, 0x03fff800, true, "subfmeo"},
+	{ 0x7c0005d1, 0x03fff800, true, "subfmeo_rc"},
+	{ 0x7c000590, 0x03fff800, true, "subfzeo"},
+	{ 0x7c000591, 0x03fff800, true, "subfzeo_rc"},
+
 	/* Logical ops */
 	{ 0x70000000, 0x03ffffff, true, "andi_rc"},
 	{ 0x74000000, 0x03ffffff, true, "andis_rc"},
@@ -139,6 +157,7 @@ static struct insn insns[] = {
 	{ 0x7c0002f4, 0x03fff801, true, "popcntw"},
 
 	/* Multiply ops */
+	/* NB this generates reserved forms with OE=1 for mulh* */
 	{ 0x7c000092, 0x03fffc00, true, "mulhd"},
 	{ 0x7c000093, 0x03fffc00, true, "mulhd_rc"},
 	{ 0x7c000012, 0x03fffc00, true, "mulhdu"},
@@ -152,6 +171,10 @@ static struct insn insns[] = {
 	{ 0x7c0001d3, 0x03fff800, true, "mulld_rc"},
 	{ 0x7c0001d6, 0x03fff800, true, "mullw"},
 	{ 0x7c0001d7, 0x03fff800, true, "mullw_rc"},
+	{ 0x7c0005d2, 0x03fff800, true, "mulldo"},
+	{ 0x7c0005d3, 0x03fff800, true, "mulldo_rc"},
+	{ 0x7c0005d6, 0x03fff800, true, "mullwo"},
+	{ 0x7c0005d7, 0x03fff800, true, "mullwo_rc"},
 	{ 0x10000030, 0x03ffffc0, false, "maddhd"},
 	{ 0x10000031, 0x03ffffc0, false, "maddhdu"},
 	{ 0x10000033, 0x03ffffc0, false, "maddld"},
@@ -218,6 +241,24 @@ static struct insn insns[] = {
 	{ 0x7c000616, 0x03fff801, true, "modsw"},
 	{ 0x7c000212, 0x03fff801, true, "modud"},
 	{ 0x7c000216, 0x03fff801, true, "moduw"},
+
+	/* Divide instructions with OE=1 */
+	{ 0x7c0007d2, 0x03fff800, true, "divdo"},
+	{ 0x7c000752, 0x03fff800, true, "divdeo"},
+	{ 0x7c000753, 0x03fff800, true, "divdeo_rc"},
+	{ 0x7c000712, 0x03fff800, true, "divdeuo"},
+	{ 0x7c000713, 0x03fff800, true, "divdeuo_rc"},
+	{ 0x7c0007d3, 0x03fff800, true, "divdo_rc"},
+	{ 0x7c000792, 0x03fff800, true, "divduo"},
+	{ 0x7c000793, 0x03fff800, true, "divduo_rc"},
+	{ 0x7c0007d6, 0x03fff800, true, "divwo"},
+	{ 0x7c000756, 0x03fff800, true, "divweo"},
+	{ 0x7c000757, 0x03fff800, true, "divweo_rc"},
+	{ 0x7c000716, 0x03fff800, true, "divweuo"},
+	{ 0x7c000717, 0x03fff800, true, "divweuo_rc"},
+	{ 0x7c0007d7, 0x03fff800, true, "divwo_rc"},
+	{ 0x7c000796, 0x03fff800, true, "divwuo"},
+	{ 0x7c000797, 0x03fff800, true, "divwuo_rc"},
 
 	/* Parity ops */
 	{ 0x7c000174, 0x03fff801, true, "prtyd"},
@@ -517,10 +558,19 @@ void generate_testcase(void *ptr, void *mem, void *save, unsigned long seed,
 
 void enable_insn(const char *insn)
 {
+	size_t l;
+	bool wild = false;
+
+	l = strlen(insn);
+	if (l > 0 && insn[l-1] == '*') {
+		--l;
+		wild = true;
+	}
 	for (unsigned long i = 0; i < NR_INSNS; i++) {
-		if (!strcmp(insns[i].name, insn)) {
+		if (!insns[i].enabled && !strncmp(insns[i].name, insn, l) &&
+		    (wild || insn[l] == 0)) {
 			print("Enabling ");
-			print(insn);
+			print(insns[i].name);
 			print("\r\n");
 			insns[i].enabled = true;
 		}
@@ -529,10 +579,19 @@ void enable_insn(const char *insn)
 
 void disable_insn(const char *insn)
 {
+	size_t l;
+	bool wild = false;
+
+	l = strlen(insn);
+	if (l > 0 && insn[l-1] == '*') {
+		--l;
+		wild = true;
+	}
 	for (unsigned long i = 0; i < NR_INSNS; i++) {
-		if (!strcmp(insns[i].name, insn)) {
+		if (insns[i].enabled && !strncmp(insns[i].name, insn, l) &&
+		    (wild || insn[l] == 0)) {
 			print("Disabling ");
-			print(insn);
+			print(insns[i].name);
 			print("\r\n");
 			insns[i].enabled = false;
 		}

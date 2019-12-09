@@ -22,9 +22,11 @@ static enum { JENKINS, XOR } hash_type = JENKINS;
 static void *insns_ptr;
 static void *mem_ptr;
 
+static const char *extra_names[4] = { "CR", "LR", "CTR", "XER" };
+
 static void run_one_test(unsigned long seed, unsigned long nr_insns)
 {
-	unsigned long gprs[32];
+	unsigned long gprs[36];
 
 	if (nr_insns > MAX_INSNS) {
 		print("Increase MAX_INSNS\r\n");
@@ -40,10 +42,14 @@ static void run_one_test(unsigned long seed, unsigned long nr_insns)
 	gprs[31] = 0;
 
 	if (registers) {
-		for (unsigned long i = 0; i < 32; i++) {
-			putlong(i);
+		for (unsigned long i = 0; i < 36; i++) {
+			if (i < 32)
+				putlong(i);
+			else
+				print(extra_names[i-32]);
 			print(" ");
-			puthex(gprs[i]);
+			if (i != 31)
+				puthex(gprs[i]);
 			print("\r\n");
 		}
 
@@ -52,7 +58,7 @@ static void run_one_test(unsigned long seed, unsigned long nr_insns)
 		uint64_t hash = 0;
 
 		if (hash_type == XOR) {
-			for (unsigned long i = 0; i < 31; i++)
+			for (unsigned long i = 0; i < 36; i++)
 				hash ^= gprs[i];
 		} else {
 			hash = jhash2((uint32_t *)gprs,
