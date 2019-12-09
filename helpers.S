@@ -51,9 +51,8 @@ prolog1_start:
 	/* zero CTR */
 	mtctr	r0
 
-	/* zero carry, and re-zero r0 */
-	addze	r0,r0
-	lis	r0,0
+	/* zero carry, overflow, etc. */
+	mtxer	r0
 .globl prolog1_end
 prolog1_end:
 
@@ -65,24 +64,20 @@ epilog1_start:
 	/* Free up r31 to use as a scratch register */
 	xor	r0,r0,r31
 
-	/* Fold CTR into GPR 0 */
-	mfctr	r31
-	xor	r0,r0,r31
-
-	/* Fold the LR into GPR 0 */
-	mflr	r31
-	xor	r0,r0,r31
-
-	/* Fold the CR and carry bit into GPR 0 */
-	mfcr	r31
-	adde	r31,r31,r31
-	xor	r0,r0,r31
-
 .globl epilog1_end
 epilog1_end:
 
 .globl epilog2_start
 epilog2_start:
+	mfcr	r0
+	std	r0, 256(r31)
+	mflr	r0
+	std	r0, 264(r31)
+	mfctr	r0
+	std	r0, 272(r31)
+	mfxer	r0
+	std	r0, 280(r31)
+
 	/* Restore our stack pointer from the save area */
 	ld	r1,248(r31)
 
