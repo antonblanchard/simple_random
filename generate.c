@@ -14,6 +14,7 @@
 #define OVERFLOW_INSNS	true
 #define DIVIDE_INSNS	true
 #define CARRY_INSNS	true
+#define LOADSTORE_INSNS	true
 
 #define CRLOGICAL_INSNS false
 
@@ -509,7 +510,7 @@ void generate_testcase(void *ptr, void *mem, void *save, unsigned long seed,
 		uint32_t j;
 		uint32_t insn;
 
-		if (!(i & 0x1f)) {
+		if (LOADSTORE_INSNS && !(i & 0x1f)) {
 			do {
 				lfsr = mylfsr(32, lfsr);
 				j = lfsr % NR_LDST_INSNS;
