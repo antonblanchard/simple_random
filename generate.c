@@ -480,8 +480,8 @@ static void *do_one_loadstore(uint32_t *p, void *mem, struct ldst_insn *insnp,
 
 #define TRAP_INSN	0x7fe00008
 
-void generate_testcase(void *ptr, void *mem, void *save, unsigned long seed,
-		       unsigned long nr_insns, bool print_insns, bool sim)
+void *generate_testcase(void *ptr, void *mem, void *save, unsigned long seed,
+		        unsigned long nr_insns, bool print_insns, bool sim)
 {
 	uint32_t *p;
 	uint32_t lfsr = seed;
@@ -499,7 +499,7 @@ void generate_testcase(void *ptr, void *mem, void *save, unsigned long seed,
 		 * runs at the same address.
 		 */
 		for (unsigned long i = 0; i < (prolog1_end-prolog1_start); i += sizeof(uint32_t))
-			memcpy(ptr+i, prolog1_start, prolog1_end-prolog1_start);
+			*(uint32_t *)(ptr+i) = NOP;
 	}
 	ptr += prolog1_end-prolog1_start;
 
@@ -554,29 +554,31 @@ void generate_testcase(void *ptr, void *mem, void *save, unsigned long seed,
 	memcpy(ptr, epilog1_start, epilog1_end-epilog1_start);
 	ptr += sizeof(epilog1_end-epilog1_start);
 
-	/*
-	 * At this point r31 is free, create a pointer to our
-	 * save area and write the GPRs out. Assume address is in
-	 * the low 32 bits.
-	 */
-	ptr = load_64bit_imm(ptr, 31, (uint64_t)save);
-
-	p = ptr;
-	/* Save GPR 0-31 to our save area */
-	for (unsigned long i = 0; i < 31; i++)
-		*p++ = STD(i, 31, i*sizeof(uint64_t));
-	ptr = p;
-
 	if (sim) {
 		*(uint32_t *)ptr = TRAP_INSN;
 		ptr += sizeof(uint32_t);
 	} else {
+		/*
+		 * At this point r31 is free, create a pointer to our
+		 * save area and write the GPRs out. Assume address is in
+		 * the low 32 bits.
+		 */
+		ptr = load_64bit_imm(ptr, 31, (uint64_t)save);
+
+		p = ptr;
+		/* Save GPR 0-31 to our save area */
+		for (unsigned long i = 0; i < 31; i++)
+			*p++ = STD(i, 31, i*sizeof(uint64_t));
+		ptr = p;
+
 		/* Second epilog */
 		memcpy(ptr, epilog2_start, epilog2_end-epilog2_start);
 		ptr += sizeof(epilog2_end-epilog2_start);
 
 		asm volatile("sync; icbi 0,%0; sync; isync": : "r"(ptr));
 	}
+
+	return ptr;
 }
 
 void enable_insn(const char *insn)
