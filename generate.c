@@ -478,8 +478,10 @@ static void *do_one_loadstore(uint32_t *p, void *mem, struct ldst_insn *insnp,
 	return p;
 }
 
+#define TRAP_INSN	0x7fe00008
+
 void generate_testcase(void *ptr, void *mem, void *save, unsigned long seed,
-		       unsigned long nr_insns, bool print_insns)
+		       unsigned long nr_insns, bool print_insns, bool sim)
 {
 	uint32_t *p;
 	uint32_t lfsr = seed;
@@ -489,7 +491,16 @@ void generate_testcase(void *ptr, void *mem, void *save, unsigned long seed,
 		lfsr = 0xffffffff;
 
 	/* Prolog */
-	memcpy(ptr, prolog1_start, prolog1_end-prolog1_start);
+	if (!sim) {
+		memcpy(ptr, prolog1_start, prolog1_end-prolog1_start);
+	} else {
+		/*
+		 * We need to pad with nops so that the test case always
+		 * runs at the same address.
+		 */
+		for (unsigned long i = 0; i < (prolog1_end-prolog1_start); i += sizeof(uint32_t))
+			memcpy(ptr+i, prolog1_start, prolog1_end-prolog1_start);
+	}
 	ptr += prolog1_end-prolog1_start;
 
 	memcpy(ptr, prolog2_start, prolog2_end-prolog2_start);
@@ -556,11 +567,16 @@ void generate_testcase(void *ptr, void *mem, void *save, unsigned long seed,
 		*p++ = STD(i, 31, i*sizeof(uint64_t));
 	ptr = p;
 
-	/* Second epilog */
-	memcpy(ptr, epilog2_start, epilog2_end-epilog2_start);
-	ptr += sizeof(epilog2_end-epilog2_start);
+	if (sim) {
+		*(uint32_t *)ptr = TRAP_INSN;
+		ptr += sizeof(uint32_t);
+	} else {
+		/* Second epilog */
+		memcpy(ptr, epilog2_start, epilog2_end-epilog2_start);
+		ptr += sizeof(epilog2_end-epilog2_start);
 
-	asm volatile("sync; icbi 0,%0; sync; isync": : "r"(ptr));
+		asm volatile("sync; icbi 0,%0; sync; isync": : "r"(ptr));
+	}
 }
 
 void enable_insn(const char *insn)

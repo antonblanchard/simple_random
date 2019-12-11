@@ -34,7 +34,7 @@ static void run_one_test(unsigned long seed, unsigned long nr_insns)
 	}
 
 	generate_testcase(insns_ptr, mem_ptr+MEM_SIZE/2, gprs, seed, nr_insns,
-			  insns);
+			  insns, false);
 	memset(mem_ptr, 0, MEM_SIZE);
 	execute_testcase(insns_ptr, gprs);
 
