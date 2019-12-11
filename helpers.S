@@ -36,7 +36,11 @@ prolog1_start:
 
 	/* Save our stack pointer into the save area */
 	std	r1,248(r3)
+.globl prolog1_end
+prolog1_end:
 
+.globl prolog2_start
+prolog2_start:
 	/* Now prepare for the test case */
 
 	/* zero r0 */
@@ -53,8 +57,8 @@ prolog1_start:
 
 	/* zero carry, overflow, etc. */
 	mtxer	r0
-.globl prolog1_end
-prolog1_end:
+.globl prolog2_end
+prolog2_end:
 
 .globl epilog1_start
 epilog1_start:

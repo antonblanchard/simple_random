@@ -283,7 +283,6 @@ static struct insn insns[] = {
 	{ 0x7c000088, 0x03fff801, false, "td_ti"},
 	{ 0x7c000008, 0x03fff801, false, "tw"},
 	{ 0x0c000000, 0x03ffffff, false, "twi"},
-
 };
 #define NR_INSNS (sizeof(insns) / sizeof(struct insn))
 
@@ -491,6 +490,9 @@ void generate_testcase(void *ptr, void *mem, void *save, unsigned long seed,
 	/* Prolog */
 	memcpy(ptr, prolog1_start, prolog1_end-prolog1_start);
 	ptr += prolog1_end-prolog1_start;
+
+	memcpy(ptr, prolog2_start, prolog2_end-prolog2_start);
+	ptr += prolog2_end-prolog2_start;
 
 	/* Initialize GPRs */
 	for (unsigned long i = 0; i < 32; i++) {
