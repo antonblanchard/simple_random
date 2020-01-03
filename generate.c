@@ -189,6 +189,8 @@ static struct insn insns[] = {
 	{ 0x7c0902a6, 0x03e00001, true, "mfspr_ctr"},
 	{ 0x7c0803a6, 0x03e00001, true, "mtspr_lr"},
 	{ 0x7c0802a6, 0x03e00001, true, "mfspr_lr"},
+	{ 0x7c0102a6, 0x03e00001, false, "mfxer"},
+	{ 0x7c0103a6, 0x03e00001, false, "mtxer"},
 
 	/* Compare ops */
 	{ 0x7c000000, 0x03fff801, true, "cmp"},
