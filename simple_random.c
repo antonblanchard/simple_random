@@ -1,6 +1,16 @@
 #include <stdbool.h>
 #include <string.h>
 
+#if __STDC_HOSTED__ == 1
+#include <stdio.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <fcntl.h>
+#include <limits.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#endif
+
 #include "generate.h"
 #include "backend.h"
 #include "jenkins.h"
@@ -80,6 +90,76 @@ static void run_many_tests(unsigned long seed, unsigned long nr_insns,
 		seed++;
 	}
 }
+
+#if __STDC_HOSTED__ == 1
+static uint32_t create_branch(long offset)
+{
+        uint32_t instruction;
+
+        instruction = 0x48000000 | (offset & 0x03FFFFFC);
+
+        return instruction;
+}
+
+static void non_interactive(char *filename, unsigned long seed,
+			    unsigned long nr_insns)
+{
+	void *end;
+	char name[PATH_MAX];
+	int fd;
+	unsigned long gprs[36];
+
+	if (nr_insns > MAX_INSNS) {
+		print("Increase MAX_INSNS\r\n");
+		return;
+	}
+
+	end = generate_testcase(insns_ptr, mem_ptr+MEM_SIZE/2, gprs,seed, nr_insns, insns, true);
+
+	sprintf(name, "%s.bin", filename);
+
+	fd = open(name, O_CREAT|O_TRUNC|O_RDWR, 0666);
+	ftruncate(fd, MEMPAGE_BASE+MEMPAGE_SIZE);
+
+	lseek(fd, 0, SEEK_SET);
+	uint32_t branch_insn = create_branch(INSNS_BASE);
+	write(fd, &branch_insn, sizeof(branch_insn));
+
+	lseek(fd, 0x100, SEEK_SET);
+	branch_insn = create_branch(INSNS_BASE-0x100);
+	write(fd, &branch_insn, sizeof(branch_insn));
+
+	lseek(fd, MEMPAGE_BASE, SEEK_SET);
+	write(fd, insns_ptr, end-insns_ptr);
+
+	close(fd);
+
+	generate_testcase(insns_ptr, mem_ptr+MEM_SIZE/2, gprs, seed, nr_insns,
+			  insns, false);
+	memset(mem_ptr, 0, MEM_SIZE);
+	execute_testcase(insns_ptr, gprs);
+
+	/* GPR 31 was our scratch space, clear it */
+	gprs[31] = 0;
+
+	sprintf(name, "%s.out", filename);
+
+	FILE *f = fopen(name, "w");
+
+	for (unsigned long i = 0; i < 36; i++) {
+		if (i < 32)
+			fprintf(f, "GPR%lu", i);
+		else
+			fprintf(f, "%s", extra_names[i-32]);
+		fprintf(f, " ");
+		if (i != 31)
+			fprintf(f, "%016lX", (gprs[i]));
+		fprintf(f, "\n");
+	}
+
+	fprintf(f, "\n");
+}
+#endif
 
 static microrl_t rl;
 static microrl_t *prl = &rl;
@@ -345,7 +425,7 @@ usage:
 	return 0;
 }
 
-int main(void)
+int main(int argc, char *argv[])
 {
 	init_console();
 
@@ -358,6 +438,18 @@ int main(void)
 
 	insns_ptr = init_testcase(MAX_INSNS + SLACK);
 	mem_ptr = init_memory();
+
+#if __STDC_HOSTED__ == 1
+	if (argc == 4) {
+		char *filename = argv[1];
+		unsigned long seed = strtoul(argv[2], NULL, 10);
+		unsigned long nr_insns = strtoul(argv[3], NULL, 10);
+
+		non_interactive(filename, seed, nr_insns);
+
+		exit(0);
+	}
+#endif
 
 	while (1)
 		microrl_insert_char(prl, getchar_unbuffered());
