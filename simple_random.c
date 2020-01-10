@@ -2,6 +2,7 @@
 #include <string.h>
 
 #if __STDC_HOSTED__ == 1
+#include <assert.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -119,18 +120,18 @@ static void non_interactive(char *filename, unsigned long seed,
 	sprintf(name, "%s.bin", filename);
 
 	fd = open(name, O_CREAT|O_TRUNC|O_RDWR, 0666);
-	ftruncate(fd, MEMPAGE_BASE+MEMPAGE_SIZE);
+	assert(ftruncate(fd, MEMPAGE_BASE+MEMPAGE_SIZE) == 0);
 
 	lseek(fd, 0, SEEK_SET);
 	uint32_t branch_insn = create_branch(INSNS_BASE);
-	write(fd, &branch_insn, sizeof(branch_insn));
+	assert(write(fd, &branch_insn, sizeof(branch_insn)) == sizeof(branch_insn));
 
 	lseek(fd, 0x100, SEEK_SET);
 	branch_insn = create_branch(INSNS_BASE-0x100);
-	write(fd, &branch_insn, sizeof(branch_insn));
+	assert(write(fd, &branch_insn, sizeof(branch_insn)) == sizeof(branch_insn));
 
 	lseek(fd, MEMPAGE_BASE, SEEK_SET);
-	write(fd, insns_ptr, end-insns_ptr);
+	assert(write(fd, insns_ptr, end-insns_ptr) == end-insns_ptr);
 
 	close(fd);
 
