@@ -16,8 +16,8 @@
 #define CARRY_INSNS	true
 #define LOADSTORE_INSNS	true
 #define LDST_UPDATE	true
-
-#define CRLOGICAL_INSNS false
+#define CRLOGICAL_INSNS true
+#define MTFXER_INSNS	true
 
 struct insn {
 	uint32_t opcode;
@@ -190,8 +190,8 @@ static struct insn insns[] = {
 	{ 0x7c0902a6, 0x03e00001, true, "mfspr_ctr"},
 	{ 0x7c0803a6, 0x03e00001, true, "mtspr_lr"},
 	{ 0x7c0802a6, 0x03e00001, true, "mfspr_lr"},
-	{ 0x7c0102a6, 0x03e00001, false, "mfxer"},
-	{ 0x7c0103a6, 0x03e00001, false, "mtxer"},
+	{ 0x7c0102a6, 0x03e00001, MTFXER_INSNS, "mfxer"},
+	{ 0x7c0103a6, 0x03e00001, MTFXER_INSNS, "mtxer"},
 
 	/* Compare ops */
 	{ 0x7c000000, 0x03fff801, true, "cmp"},
