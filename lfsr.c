@@ -1,12 +1,12 @@
 /*
  * Galois LFSR
  * From:
- * http://www.newwaveinstruments.com/resources/articles/m_sequence_linear_feedback_shift_register_lfsr.htm
+ * https://en.wikipedia.org/wiki/Linear-feedback_shift_register
  */
 const unsigned long lfsr_taps[] = {
 	0,
 	0,
-	0,
+	(1UL << (2-1)) | (1UL << (1-1)),
 	(1UL << (3-1)) | (1UL << (2-1)),
 	(1UL << (4-1)) | (1UL << (3-1)),
 	(1UL << (5-1)) | (1UL << (3-1)),
