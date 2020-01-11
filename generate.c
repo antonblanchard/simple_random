@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include "generate.h"
 #include "lfsr.h"
+#include "jenkins.h"
 #include "helpers.h"
 #include "mystdio.h"
 
@@ -492,6 +493,9 @@ void *generate_testcase(void *ptr, void *mem, void *save, unsigned long seed,
 	/* LFSR needs a non zero value to work */
 	if (!lfsr)
 		lfsr = 0xffffffff;
+
+	/* Hash the LFSR seed so we get better early values */
+	lfsr = jhash2(&lfsr, 1, 0);
 
 	/* Prolog */
 	if (!sim) {
