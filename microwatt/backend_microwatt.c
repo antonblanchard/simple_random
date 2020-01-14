@@ -20,10 +20,14 @@ void *init_memory(void)
 
 typedef uint64_t (*testfunc)(void *gprs);
 
-void execute_testcase(void *insns, void *gprs)
+long execute_testcase(void *insns, void *gprs)
 {
 	testfunc func;
+	long tb_start, tb_end;
 
 	func = (testfunc)insns;
+	asm volatile("mfspr %0,268" : "=r" (tb_start));
 	func(gprs);
+	asm volatile("mfspr %0,268" : "=r" (tb_end));
+	return tb_end - tb_start;
 }

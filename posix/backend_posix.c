@@ -40,23 +40,28 @@ void *init_memory(void)
 
 typedef uint64_t (*testfunc)(void *gprs);
 
-void execute_testcase(void *insns, void *gprs)
+long execute_testcase(void *insns, void *gprs)
 {
 	testfunc func;
 	unsigned long r1_before = 0, r1_after = 0;
 	unsigned long r13_before = 0, r13_after = 0;
+	long tb_start, tb_end;
 
 	asm volatile("mr %0,1" : : "r" (r1_before));
 	asm volatile("mr %0,13" : : "r" (r13_before));
 
 	func = (testfunc)insns;
+	asm volatile("mfspr %0,268" : "=r" (tb_start));
 	func(gprs);
+	asm volatile("mfspr %0,268" : "=r" (tb_end));
 
 	asm volatile("mr %0,1" : : "r" (r1_after));
 	asm volatile("mr %0,13" : : "r" (r13_after));
 
 	assert(r13_before == r13_after);
 	assert(r1_before == r1_after);
+
+	return tb_end - tb_start;
 }
 
 void putchar_unbuffered(const char c)
