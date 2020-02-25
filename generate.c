@@ -299,59 +299,60 @@ struct ldst_insn {
 	enum form_t form;
 	bool update;
 	uint8_t size;
+	uint8_t align;
 	bool enabled;
 	char *name;
 };
 
 static struct ldst_insn ldst_insns[] = {
-	{ 0x88000000, 0x03ffffff, D,  false, 1, true, "lbz"},
-	{ 0x7c0000ae, 0x03fff801, X,  false, 1, true, "lbzx"},
-	{ 0xe8000000, 0x03fffffc, DS, false, 8, true, "ld"},
-	{ 0x7c000428, 0x03fff801, X,  false, 8, true, "ldbrx"},
-	{ 0x7c00002a, 0x03fff801, X,  false, 8, true, "ldx"},
-	{ 0x7c00062c, 0x03fff801, X,  false, 2, true, "lhbrx"},
-	{ 0xa0000000, 0x03ffffff, D,  false, 2, true, "lhz"},
-	{ 0x7c00022e, 0x03fff801, X,  false, 2, true, "lhzx"},
-	{ 0x7c00042c, 0x03fff801, X,  false, 4, true, "lwbrx"},
-	{ 0x80000000, 0x03ffffff, D,  false, 4, true, "lwz"},
-	{ 0x7c00002e, 0x03fff801, X,  false, 4, true, "lwzx"},
-	{ 0x98000000, 0x03ffffff, D,  false, 1, true, "stb"},
-	{ 0x7c0001ae, 0x03fff801, X,  false, 1, true, "stbx"},
-	{ 0xf8000000, 0x03fffffc, DS, false, 8, true, "std"},
-	{ 0x7c000528, 0x03fff801, X,  false, 8, true, "stdbrx"},
-	{ 0x7c00012a, 0x03fff801, X,  false, 8, true, "stdx"},
-	{ 0xb0000000, 0x03ffffff, D,  false, 2, true, "sth"},
-	{ 0x7c00072c, 0x03fff801, X,  false, 2, true, "sthbrx"},
-	{ 0x7c00032e, 0x03fff801, X,  false, 2, true, "sthx"},
-	{ 0x90000000, 0x03ffffff, D,  false, 4, true, "stw"},
-	{ 0x7c00052c, 0x03fff801, X,  false, 4, true, "stwbrx"},
-	{ 0x7c00012e, 0x03fff801, X,  false, 4, true, "stwx"},
-	{ 0x7c000068, 0x03fff801, X,  false, 1, true, "lbarx"},
-	{ 0x7c0000e8, 0x03fff801, X,  false, 2, true, "lharx"},
-	{ 0x7c0000a8, 0x03fff801, X,  false, 8, true, "ldarx"},
-	{ 0xe8000001, 0x03fffffc, DS, true,  8, LDST_UPDATE, "ldu"},
-	{ 0x7c00006a, 0x03fff801, X,  true,  8, LDST_UPDATE, "ldux"},
-	{ 0xa8000000, 0x03ffffff, D,  false, 2, true, "lha"},
-	{ 0x7c0002ae, 0x03fff801, X,  false, 2, true, "lhax"},
-	{ 0xe8000002, 0x03fffffc, DS, false, 4, true, "lwa"},
-	{ 0x7c0002aa, 0x03fff801, X,  false, 4, true, "lwax"},
-	{ 0x94000000, 0x03ffffff, D,  true,  4, LDST_UPDATE, "stwu"},
-	{ 0x7c00016e, 0x03fff801, X,  true,  4, LDST_UPDATE, "stwux"},
-	{ 0x9c000000, 0x03ffffff, D,  true,  1, LDST_UPDATE, "stbu"},
-	{ 0x7c0001ee, 0x03fff801, X,  true,  1, LDST_UPDATE, "stbux"},
-	{ 0xb4000000, 0x03ffffff, D,  true,  2, LDST_UPDATE, "sthu"},
-	{ 0x7c00036e, 0x03fff801, X,  true,  2, LDST_UPDATE, "sthux"},
-	{ 0xf8000001, 0x03fffffc, DS, true,  8, LDST_UPDATE, "stdu"},
-	{ 0x7c00016a, 0x03fff801, X,  true,  8, LDST_UPDATE, "stdux"},
-	{ 0x8c000000, 0x03ffffff, D,  true,  1, LDST_UPDATE, "lbzu"},
-	{ 0x7c0000ee, 0x03fff801, X,  true,  1, LDST_UPDATE, "lbzux"},
-	{ 0xa4000000, 0x03ffffff, D,  true,  2, LDST_UPDATE, "lhzu"},
-	{ 0x7c00026e, 0x03fff801, X,  true,  2, LDST_UPDATE, "lhzux"},
-	{ 0x84000000, 0x03ffffff, D,  true,  4, LDST_UPDATE, "lwzu"},
-	{ 0x7c00006e, 0x03fff801, X,  true,  4, LDST_UPDATE, "lwzux"},
-	{ 0xac000000, 0x03ffffff, D,  true,  2, LDST_UPDATE, "lhau"},
-	{ 0x7c0002ee, 0x03fff801, X,  true,  2, LDST_UPDATE, "lhaux"},
-	{ 0x7c0002ea, 0x03fff801, X,  true,  4, LDST_UPDATE, "lwaux"},
+	{ 0x88000000, 0x03ffffff, D,  false, 1, 1, true, "lbz"},
+	{ 0x7c0000ae, 0x03fff801, X,  false, 1, 1, true, "lbzx"},
+	{ 0xe8000000, 0x03fffffc, DS, false, 8, 4, true, "ld"},
+	{ 0x7c000428, 0x03fff801, X,  false, 8, 1, true, "ldbrx"},
+	{ 0x7c00002a, 0x03fff801, X,  false, 8, 1, true, "ldx"},
+	{ 0x7c00062c, 0x03fff801, X,  false, 2, 1, true, "lhbrx"},
+	{ 0xa0000000, 0x03ffffff, D,  false, 2, 1, true, "lhz"},
+	{ 0x7c00022e, 0x03fff801, X,  false, 2, 1, true, "lhzx"},
+	{ 0x7c00042c, 0x03fff801, X,  false, 4, 1, true, "lwbrx"},
+	{ 0x80000000, 0x03ffffff, D,  false, 4, 1, true, "lwz"},
+	{ 0x7c00002e, 0x03fff801, X,  false, 4, 1, true, "lwzx"},
+	{ 0x98000000, 0x03ffffff, D,  false, 1, 1, true, "stb"},
+	{ 0x7c0001ae, 0x03fff801, X,  false, 1, 1, true, "stbx"},
+	{ 0xf8000000, 0x03fffffc, DS, false, 8, 4, true, "std"},
+	{ 0x7c000528, 0x03fff801, X,  false, 8, 1, true, "stdbrx"},
+	{ 0x7c00012a, 0x03fff801, X,  false, 8, 1, true, "stdx"},
+	{ 0xb0000000, 0x03ffffff, D,  false, 2, 1, true, "sth"},
+	{ 0x7c00072c, 0x03fff801, X,  false, 2, 1, true, "sthbrx"},
+	{ 0x7c00032e, 0x03fff801, X,  false, 2, 1, true, "sthx"},
+	{ 0x90000000, 0x03ffffff, D,  false, 4, 1, true, "stw"},
+	{ 0x7c00052c, 0x03fff801, X,  false, 4, 1, true, "stwbrx"},
+	{ 0x7c00012e, 0x03fff801, X,  false, 4, 1, true, "stwx"},
+	{ 0x7c000068, 0x03fff801, X,  false, 1, 1, true, "lbarx"},
+	{ 0x7c0000e8, 0x03fff801, X,  false, 2, 2, true, "lharx"},
+	{ 0x7c0000a8, 0x03fff801, X,  false, 8, 8, true, "ldarx"},
+	{ 0xe8000001, 0x03fffffc, DS, true,  8, 4, LDST_UPDATE, "ldu"},
+	{ 0x7c00006a, 0x03fff801, X,  true,  8, 1, LDST_UPDATE, "ldux"},
+	{ 0xa8000000, 0x03ffffff, D,  false, 2, 1, true, "lha"},
+	{ 0x7c0002ae, 0x03fff801, X,  false, 2, 1, true, "lhax"},
+	{ 0xe8000002, 0x03fffffc, DS, false, 4, 4, true, "lwa"},
+	{ 0x7c0002aa, 0x03fff801, X,  false, 4, 1, true, "lwax"},
+	{ 0x94000000, 0x03ffffff, D,  true,  4, 1, LDST_UPDATE, "stwu"},
+	{ 0x7c00016e, 0x03fff801, X,  true,  4, 1, LDST_UPDATE, "stwux"},
+	{ 0x9c000000, 0x03ffffff, D,  true,  1, 1, LDST_UPDATE, "stbu"},
+	{ 0x7c0001ee, 0x03fff801, X,  true,  1, 1, LDST_UPDATE, "stbux"},
+	{ 0xb4000000, 0x03ffffff, D,  true,  2, 1, LDST_UPDATE, "sthu"},
+	{ 0x7c00036e, 0x03fff801, X,  true,  2, 1, LDST_UPDATE, "sthux"},
+	{ 0xf8000001, 0x03fffffc, DS, true,  8, 1, LDST_UPDATE, "stdu"},
+	{ 0x7c00016a, 0x03fff801, X,  true,  8, 1, LDST_UPDATE, "stdux"},
+	{ 0x8c000000, 0x03ffffff, D,  true,  1, 1, LDST_UPDATE, "lbzu"},
+	{ 0x7c0000ee, 0x03fff801, X,  true,  1, 1, LDST_UPDATE, "lbzux"},
+	{ 0xa4000000, 0x03ffffff, D,  true,  2, 1, LDST_UPDATE, "lhzu"},
+	{ 0x7c00026e, 0x03fff801, X,  true,  2, 1, LDST_UPDATE, "lhzux"},
+	{ 0x84000000, 0x03ffffff, D,  true,  4, 1, LDST_UPDATE, "lwzu"},
+	{ 0x7c00006e, 0x03fff801, X,  true,  4, 1, LDST_UPDATE, "lwzux"},
+	{ 0xac000000, 0x03ffffff, D,  true,  2, 1, LDST_UPDATE, "lhau"},
+	{ 0x7c0002ee, 0x03fff801, X,  true,  2, 1, LDST_UPDATE, "lhaux"},
+	{ 0x7c0002ea, 0x03fff801, X,  true,  4, 1, LDST_UPDATE, "lwaux"},
 };
 #define NR_LDST_INSNS (sizeof(ldst_insns) / sizeof(struct ldst_insn))
 
@@ -426,12 +427,15 @@ static void *do_one_loadstore(uint32_t *p, void *mem, struct ldst_insn *insnp,
 	*lfsr = mylfsr(32, *lfsr);
 	off = *lfsr % 32;
 
-	/* We don't support unaligned accesses yet, so align the offset */
-	off &= ~(insnp->size-1);
+	/* Align the offset */
+	off &= ~(insnp->align - 1);
 
 	/* Use the high bit for the sign of the offset */
 	if (*lfsr & 0x80000000)
 		off = -off;
+	else if (off + insnp->size > 32)
+		/* make sure we don't access outside our mem array */
+		off = 32 - insnp->size;
 
 	if (insnp->form == X) {
 		uint8_t ra, rb, rt;
@@ -467,7 +471,7 @@ static void *do_one_loadstore(uint32_t *p, void *mem, struct ldst_insn *insnp,
 
 		p = load_64bit_imm(p, ra, (unsigned long)mem);
 
-		insn |= PPC_RT(rt) | PPC_RA(ra) | (off & 0xffff);
+		insn |= PPC_RT(rt) | PPC_RA(ra) | (off & 0xffff & insnp->mask);
 	}
 
 	if (print_insns) {
