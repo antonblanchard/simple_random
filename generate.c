@@ -329,6 +329,7 @@ static struct ldst_insn ldst_insns[] = {
 	{ 0x7c00012e, 0x03fff801, X,  false, 4, 1, true, "stwx"},
 	{ 0x7c000068, 0x03fff801, X,  false, 1, 1, true, "lbarx"},
 	{ 0x7c0000e8, 0x03fff801, X,  false, 2, 2, true, "lharx"},
+	{ 0x7c000028, 0x03fff801, X,  false, 4, 4, true, "lwarx"},
 	{ 0x7c0000a8, 0x03fff801, X,  false, 8, 8, true, "ldarx"},
 	{ 0xe8000001, 0x03fffffc, DS, true,  8, 4, LDST_UPDATE, "ldu"},
 	{ 0x7c00006a, 0x03fff801, X,  true,  8, 1, LDST_UPDATE, "ldux"},
@@ -353,6 +354,10 @@ static struct ldst_insn ldst_insns[] = {
 	{ 0xac000000, 0x03ffffff, D,  true,  2, 1, LDST_UPDATE, "lhau"},
 	{ 0x7c0002ee, 0x03fff801, X,  true,  2, 1, LDST_UPDATE, "lhaux"},
 	{ 0x7c0002ea, 0x03fff801, X,  true,  4, 1, LDST_UPDATE, "lwaux"},
+	{ 0x7c00056d, 0x03fff800, X,  false, 1, 1, true, "stbcx."},
+	{ 0x7c0005ad, 0x03fff800, X,  false, 2, 2, true, "sthcx."},
+	{ 0x7c00012d, 0x03fff800, X,  false, 4, 4, true, "stwcx."},
+	{ 0x7c0001ad, 0x03fff800, X,  false, 8, 8, true, "stdcx."},
 };
 #define NR_LDST_INSNS (sizeof(ldst_insns) / sizeof(struct ldst_insn))
 
