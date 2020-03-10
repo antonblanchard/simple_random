@@ -46,14 +46,14 @@ void execute_testcase(void *insns, void *gprs)
 	unsigned long r1_before = 0, r1_after = 0;
 	unsigned long r13_before = 0, r13_after = 0;
 
-	asm volatile("mr %0,1" : : "r" (r1_before));
-	asm volatile("mr %0,13" : : "r" (r13_before));
+	asm volatile("mr %0,1" : "=r" (r1_before));
+	asm volatile("mr %0,13" : "=r" (r13_before));
 
 	func = (testfunc)insns;
 	func(gprs);
 
-	asm volatile("mr %0,1" : : "r" (r1_after));
-	asm volatile("mr %0,13" : : "r" (r13_after));
+	asm volatile("mr %0,1" : "=r" (r1_after));
+	asm volatile("mr %0,13" : "=r" (r13_after));
 
 	assert(r13_before == r13_after);
 	assert(r1_before == r1_after);
