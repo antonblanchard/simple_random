@@ -35,25 +35,25 @@ static void *mem_ptr;
 
 static const char *extra_names[4] = { "CR", "LR", "CTR", "XER" };
 
-static void run_one_test(unsigned long seed, unsigned long nr_insns)
+static long run_one_test(unsigned long seed, unsigned long nr_insns)
 {
-	unsigned long gprs[36];
+	unsigned long gprs[NGPRS];
+	long tb_diff;
 
 	if (nr_insns > MAX_INSNS) {
 		print("Increase MAX_INSNS\r\n");
-		return;
+		return 0;
 	}
 
 	generate_testcase(insns_ptr, mem_ptr+MEM_SIZE/2, gprs, seed, nr_insns,
 			  insns, false);
-	memset(mem_ptr, 0, MEM_SIZE);
-	execute_testcase(insns_ptr, gprs);
+	tb_diff = execute_testcase(insns_ptr, gprs, mem_ptr);
 
 	/* GPR 31 was our scratch space, clear it */
 	gprs[31] = 0;
 
 	if (registers) {
-		for (unsigned long i = 0; i < 36; i++) {
+		for (unsigned long i = 0; i < NGPRS; i++) {
 			if (i < 32)
 				putlong(i);
 			else
@@ -63,13 +63,22 @@ static void run_one_test(unsigned long seed, unsigned long nr_insns)
 				puthex(gprs[i]);
 			print("\r\n");
 		}
+		print("Memory @ ");
+		puthex((unsigned long)mem_ptr);
+		for (unsigned long i = 0; i < MEM_SIZE; i += sizeof(unsigned long)) {
+			if (i % 32 == 0)
+				print("\r\n");
+			else
+				print(" ");
+			puthex(*(unsigned long *)(mem_ptr + i));
+		}
 
-		print("\r\n");
+		print("\r\n\r\n");
 	} else {
 		uint64_t hash = 0;
 
 		if (hash_type == XOR) {
-			for (unsigned long i = 0; i < 36; i++)
+			for (unsigned long i = 0; i < NGPRS; i++)
 				hash ^= gprs[i];
 		} else {
 			hash = jhash2((uint32_t *)gprs,
@@ -81,15 +90,22 @@ static void run_one_test(unsigned long seed, unsigned long nr_insns)
 		puthex(hash);
 		print("\r\n");
 	}
+
+	return tb_diff;
 }
 
 static void run_many_tests(unsigned long seed, unsigned long nr_insns,
 			   unsigned long nr_tests)
 {
+	long tb_ticks = 0;
+
 	for (unsigned long i = 0; i < nr_tests; i++) {
-		run_one_test(seed, nr_insns);
+		tb_ticks += run_one_test(seed, nr_insns);
 		seed++;
 	}
+	print("timebase delta = ");
+	putlong(tb_ticks);
+	print("\r\n");
 }
 
 #if __STDC_HOSTED__ == 1
@@ -108,7 +124,7 @@ static void non_interactive(char *filename, unsigned long seed,
 	void *end;
 	char name[PATH_MAX];
 	int fd;
-	unsigned long gprs[36];
+	unsigned long gprs[NGPRS];
 
 	if (nr_insns > MAX_INSNS) {
 		print("Increase MAX_INSNS\r\n");
@@ -137,8 +153,7 @@ static void non_interactive(char *filename, unsigned long seed,
 
 	generate_testcase(insns_ptr, mem_ptr+MEM_SIZE/2, gprs, seed, nr_insns,
 			  insns, false);
-	memset(mem_ptr, 0, MEM_SIZE);
-	execute_testcase(insns_ptr, gprs);
+	execute_testcase(insns_ptr, gprs, mem_ptr);
 
 	/* GPR 31 was our scratch space, clear it */
 	gprs[31] = 0;
@@ -147,7 +162,7 @@ static void non_interactive(char *filename, unsigned long seed,
 
 	FILE *f = fopen(name, "w");
 
-	for (unsigned long i = 0; i < 36; i++) {
+	for (unsigned long i = 0; i < NGPRS; i++) {
 		if (i < 32)
 			fprintf(f, "GPR%lu", i);
 		else

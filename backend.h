@@ -3,7 +3,7 @@
 void init_console(void);
 void *init_testcase(unsigned long max_insns);
 void *init_memory(void);
-void execute_testcase(void *insn, void *gprs);
+long execute_testcase(void *insn, void *gprs, void *mem);
 void putchar_unbuffered(const char c);
 char getchar_unbuffered(void);
 
@@ -14,3 +14,5 @@ char getchar_unbuffered(void);
 
 #define MEM_BASE (112*1024)
 #define MEM_SIZE 64
+
+#define NGPRS	36
