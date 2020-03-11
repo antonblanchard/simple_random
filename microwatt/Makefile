@@ -1,7 +1,7 @@
 ARCH = $(shell uname -m)
 ifneq ("$(ARCH)", "ppc64")
 ifneq ("$(ARCH)", "ppc64le")
-	CROSS_COMPILE = powerpc64le-linux-gnu-
+	CROSS_COMPILE ?= powerpc64le-linux-
 endif
 endif
 
