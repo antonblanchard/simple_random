@@ -491,11 +491,27 @@ static void *do_one_loadstore(uint32_t *p, void *mem, struct ldst_insn *insnp,
 	return p;
 }
 
+#define CACHELINE_SIZE 32
+
+static inline void icache_flush(void *start, void *end)
+{
+	for (void *p = start; p < end; p += CACHELINE_SIZE)
+		asm volatile("dcbst 0,%0": : "r"(p));
+
+	asm volatile("sync":::"memory");
+
+	for (void *p = start; p < end; p += CACHELINE_SIZE)
+		asm volatile("icbi 0,%0": : "r"(p));
+
+	asm volatile("isync":::"memory");
+}
+
 #define TRAP_INSN	0x7fe00008
 
 void *generate_testcase(void *ptr, void *mem, void *save, unsigned long seed,
 		        unsigned long nr_insns, bool print_insns, bool sim)
 {
+	void *start = ptr;
 	uint32_t *p;
 	uint32_t lfsr = seed;
 
@@ -568,7 +584,7 @@ void *generate_testcase(void *ptr, void *mem, void *save, unsigned long seed,
 
 	/* First epilog */
 	memcpy(ptr, epilog1_start, epilog1_end-epilog1_start);
-	ptr += sizeof(epilog1_end-epilog1_start);
+	ptr += epilog1_end-epilog1_start;
 
 	if (sim) {
 		*(uint32_t *)ptr = TRAP_INSN;
@@ -589,9 +605,9 @@ void *generate_testcase(void *ptr, void *mem, void *save, unsigned long seed,
 
 		/* Second epilog */
 		memcpy(ptr, epilog2_start, epilog2_end-epilog2_start);
-		ptr += sizeof(epilog2_end-epilog2_start);
+		ptr += epilog2_end-epilog2_start;
 
-		asm volatile("sync; icbi 0,%0; sync; isync": : "r"(ptr));
+		icache_flush(start, ptr);
 	}
 
 	return ptr;
