@@ -568,7 +568,7 @@ void *generate_testcase(void *ptr, void *mem, void *save, unsigned long seed,
 
 	/* First epilog */
 	memcpy(ptr, epilog1_start, epilog1_end-epilog1_start);
-	ptr += sizeof(epilog1_end-epilog1_start);
+	ptr += epilog1_end-epilog1_start;
 
 	if (sim) {
 		*(uint32_t *)ptr = TRAP_INSN;
@@ -589,7 +589,7 @@ void *generate_testcase(void *ptr, void *mem, void *save, unsigned long seed,
 
 		/* Second epilog */
 		memcpy(ptr, epilog2_start, epilog2_end-epilog2_start);
-		ptr += sizeof(epilog2_end-epilog2_start);
+		ptr += epilog2_end-epilog2_start;
 
 		asm volatile("sync; icbi 0,%0; sync; isync": : "r"(ptr));
 	}
