@@ -197,6 +197,7 @@ static void sigint(microrl_t *pThis)
 #define _CMD_DISABLE		"disable"
 #define _CMD_READ		"read"
 #define _CMD_MEMTEST		"memtest"
+#define _CMD_QUIT		"quit"
 
 #define _NUM_OF_VER_SCMD 2
 
@@ -246,6 +247,9 @@ void usage(void)
 	print("\t\tenable [insn]\r\n");
 	print("\t\tdisable [insn]\r\n");
 	print("\t\tmemtest [start_addr] [end_addr]\r\n");
+#if __STDC_HOSTED__ == 1
+	print("\t\tquit\r\n");
+#endif
 }
 
 static void set_variable(const char *var, const char *val)
@@ -433,6 +437,11 @@ static int execute(microrl_t *pThis, int argc, const char *const *argv)
 
 		memtest(argv[1], argv[2]);
 	}
+#if __STDC_HOSTED__ == 1
+	else if (!strcmp(argv[0], _CMD_QUIT)) {
+		exit(0);
+	}
+#endif
 
 	return 0;
 
