@@ -29,9 +29,6 @@ libc.o: libc_objdir $(LIBC_OBJ)
 simple_random.o: ../simple_random.c ../generate.h ../backend.h ../jenkins.h ../microrl/microrl.h ../mystdio.h
 	$(CC) $(CFLAGS) -c $<
 
-lfsr.o: ../lfsr.c
-	$(CC) $(CFLAGS) -c $<
-
 generate.o: ../generate.c ../generate.h ../lfsr.h ../helpers.h
 	$(CC) $(CFLAGS) -c $<
 
@@ -44,7 +41,7 @@ mystdio.o: ../mystdio.c ../mystdio.h
 microrl.o: ../microrl/microrl.c ../microrl/config.h ../microrl/microrl.h
 	$(CC) $(CFLAGS) -c $<
 
-simple_random.elf: simple_random.o lfsr.o generate.o head.o libc.o uart.o backend_microwatt.o helpers.o microrl.o mystdio.o
+simple_random.elf: simple_random.o generate.o head.o libc.o uart.o backend_microwatt.o helpers.o microrl.o mystdio.o
 	$(LD) $(LDFLAGS) -o $@ $^
 
 simple_random.bin: simple_random.elf

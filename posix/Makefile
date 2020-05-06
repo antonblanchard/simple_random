@@ -18,9 +18,6 @@ all: simple_random
 simple_random.o: ../simple_random.c ../generate.h ../backend.h ../jenkins.h ../microrl/microrl.h ../mystdio.h
 	$(CC) $(CFLAGS) -c $<
 
-lfsr.o: ../lfsr.c
-	$(CC) $(CFLAGS) -c $<
-
 generate.o: ../generate.c ../generate.h ../lfsr.h ../helpers.h
 	$(CC) $(CFLAGS) -c $<
 
@@ -35,7 +32,7 @@ microrl.o: ../microrl/microrl.c ../microrl/config.h ../microrl/microrl.h
 
 backend_posix.o: backend_posix.c ../backend.h
 
-simple_random: simple_random.o lfsr.o generate.o backend_posix.o helpers.o microrl.o mystdio.o
+simple_random: simple_random.o generate.o backend_posix.o helpers.o microrl.o mystdio.o
 	$(CC) $(LDFLAGS) -o $@ $^
 
 clean:
