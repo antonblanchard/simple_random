@@ -35,7 +35,8 @@ static void *mem_ptr;
 
 static const char *extra_names[4] = { "CR", "LR", "CTR", "XER" };
 
-static long run_one_test(unsigned long seed, unsigned long nr_insns)
+static long run_one_test(unsigned long seed, unsigned long nr_insns,
+			 unsigned long *lenp)
 {
 	unsigned long gprs[NGPRS];
 	long tb_diff;
@@ -46,7 +47,7 @@ static long run_one_test(unsigned long seed, unsigned long nr_insns)
 	}
 
 	generate_testcase(insns_ptr, mem_ptr+MEM_SIZE/2, gprs, seed, nr_insns,
-			  insns, false);
+			  insns, false, lenp);
 	tb_diff = execute_testcase(insns_ptr, gprs, mem_ptr);
 
 	/* GPR 31 was our scratch space, clear it */
@@ -98,13 +99,16 @@ static void run_many_tests(unsigned long seed, unsigned long nr_insns,
 			   unsigned long nr_tests)
 {
 	long tb_ticks = 0;
+	unsigned long total_bytes = 0;
 
 	for (unsigned long i = 0; i < nr_tests; i++) {
-		tb_ticks += run_one_test(seed, nr_insns);
+		tb_ticks += run_one_test(seed, nr_insns, &total_bytes);
 		seed++;
 	}
 	print("timebase delta = ");
 	putlong(tb_ticks);
+	print(", # instructions = ");
+	putlong(total_bytes / 4);
 	print("\r\n");
 }
 
@@ -131,7 +135,7 @@ static void non_interactive(char *filename, unsigned long seed,
 		return;
 	}
 
-	end = generate_testcase(insns_ptr, mem_ptr+MEM_SIZE/2, gprs,seed, nr_insns, insns, true);
+	end = generate_testcase(insns_ptr, mem_ptr+MEM_SIZE/2, gprs,seed, nr_insns, insns, true, NULL);
 
 	sprintf(name, "%s.bin", filename);
 
@@ -152,7 +156,7 @@ static void non_interactive(char *filename, unsigned long seed,
 	close(fd);
 
 	generate_testcase(insns_ptr, mem_ptr+MEM_SIZE/2, gprs, seed, nr_insns,
-			  insns, false);
+			  insns, false, NULL);
 	execute_testcase(insns_ptr, gprs, mem_ptr);
 
 	/* GPR 31 was our scratch space, clear it */
@@ -396,7 +400,7 @@ static int execute(microrl_t *pThis, int argc, const char *const *argv)
 		seed = __atoi(argv[1], 10);
 		nr_insns = __atoi(argv[2], 10);
 
-		run_one_test(seed, nr_insns);
+		run_one_test(seed, nr_insns, NULL);
 
 	} else if (!strcmp(argv[0], _CMD_TEST_MANY)) {
 		unsigned long seed;

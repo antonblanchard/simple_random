@@ -509,11 +509,13 @@ static inline void icache_flush(void *start, void *end)
 #define TRAP_INSN	0x7fe00008
 
 void *generate_testcase(void *ptr, void *mem, void *save, unsigned long seed,
-		        unsigned long nr_insns, bool print_insns, bool sim)
+		        unsigned long nr_insns, bool print_insns, bool sim,
+			unsigned long *lenp)
 {
 	void *start = ptr;
 	uint32_t *p;
 	uint32_t lfsr = seed;
+	void *orig_ptr = ptr;
 
 	/* LFSR needs a non zero value to work */
 	if (!lfsr)
@@ -610,6 +612,8 @@ void *generate_testcase(void *ptr, void *mem, void *save, unsigned long seed,
 		icache_flush(start, ptr);
 	}
 
+	if (lenp)
+		*lenp += ptr - orig_ptr;
 	return ptr;
 }
 
