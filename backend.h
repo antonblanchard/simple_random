@@ -13,6 +13,6 @@ char getchar_unbuffered(void);
 #define INSNS_BASE (64*1024)
 
 #define MEM_BASE (112*1024)
-#define MEM_SIZE 64
+#define MEM_SIZE 1024
 
-#define NGPRS	36
+#define NGPRS	(36+128)

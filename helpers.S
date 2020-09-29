@@ -34,6 +34,8 @@ prolog1_start:
 	std	r30,168(r1)
 	std	r31,176(r1)
 
+	/* We don't save VMX/VSX regs since we compile with -mno-altivec -mno-vsx */
+
 	/* Save our stack pointer into the save area */
 	std	r1,248(r3)
 .globl prolog1_end

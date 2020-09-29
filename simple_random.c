@@ -55,13 +55,28 @@ static long run_one_test(unsigned long seed, unsigned long nr_insns,
 
 	if (registers) {
 		for (unsigned long i = 0; i < NGPRS; i++) {
-			if (i < 32)
-				putlong(i);
-			else
-				print(extra_names[i-32]);
-			print(" ");
-			if (i != 31)
+			if (i < 36) {
+				if (i < 32)
+					putlong(i);
+				else
+					print(extra_names[i-32]);
+				print(" ");
+				if (i != 31)
+					puthex(gprs[i]);
+			} else {
+				if (i < 100) {
+					print("F");
+					putlong((i - 36) >> 1);
+				} else {
+					print("V");
+					putlong((i - 100) >> 1);
+				}
+				print(" ");
+				puthex(gprs[i+1]);
+				print(" ");
 				puthex(gprs[i]);
+				++i;
+			}
 			print("\r\n");
 		}
 		print("Memory @ ");

@@ -7,6 +7,7 @@
 #include "jenkins.h"
 #include "helpers.h"
 #include "mystdio.h"
+#include "backend.h"
 
 #ifdef DEBUG
 #include <stdio.h>
@@ -19,6 +20,9 @@
 #define LDST_UPDATE	true
 #define CRLOGICAL_INSNS true
 #define MTFXER_INSNS	true
+#define VECTOR_INSNS	true
+#define VSX_INSNS	true
+#define STCOND_INSNS	false
 
 struct insn {
 	uint32_t opcode;
@@ -288,10 +292,106 @@ static struct insn insns[] = {
 	{ 0x7c000088, 0x03fff801, false, "td_ti"},
 	{ 0x7c000008, 0x03fff801, false, "tw"},
 	{ 0x0c000000, 0x03ffffff, false, "twi"},
+
+	/* Vector ops */
+	{ 0x10000002, 0x03fff800, VECTOR_INSNS, "vmaxub" },
+	{ 0x10000042, 0x03fff800, VECTOR_INSNS, "vmaxuh" },
+	{ 0x10000082, 0x03fff800, VECTOR_INSNS, "vmaxuw" },
+	{ 0x100000c2, 0x03fff800, VECTOR_INSNS, "vmaxud" },
+	{ 0x10000102, 0x03fff800, VECTOR_INSNS, "vmaxsb" },
+	{ 0x10000142, 0x03fff800, VECTOR_INSNS, "vmaxsh" },
+	{ 0x10000182, 0x03fff800, VECTOR_INSNS, "vmaxsw" },
+	{ 0x100001c2, 0x03fff800, VECTOR_INSNS, "vmaxsd" },
+	{ 0x10000202, 0x03fff800, VECTOR_INSNS, "vminub" },
+	{ 0x10000242, 0x03fff800, VECTOR_INSNS, "vminuh" },
+	{ 0x10000282, 0x03fff800, VECTOR_INSNS, "vminuw" },
+	{ 0x100002c2, 0x03fff800, VECTOR_INSNS, "vminud" },
+	{ 0x10000302, 0x03fff800, VECTOR_INSNS, "vminsb" },
+	{ 0x10000342, 0x03fff800, VECTOR_INSNS, "vminsh" },
+	{ 0x10000382, 0x03fff800, VECTOR_INSNS, "vminsw" },
+	{ 0x100003c2, 0x03fff800, VECTOR_INSNS, "vminsd" },
+	{ 0x10000004, 0x03fff800, VECTOR_INSNS, "vrlb" },
+	{ 0x10000044, 0x03fff800, VECTOR_INSNS, "vrlh" },
+	{ 0x10000084, 0x03fff800, VECTOR_INSNS, "vrlw" },
+	{ 0x10000104, 0x03fff800, VECTOR_INSNS, "vslb" },
+	{ 0x10000144, 0x03fff800, VECTOR_INSNS, "vslh" },
+	{ 0x10000184, 0x03fff800, VECTOR_INSNS, "vslw" },
+	{ 0x10000204, 0x03fff800, VECTOR_INSNS, "vsrb" },
+	{ 0x10000244, 0x03fff800, VECTOR_INSNS, "vsrh" },
+	{ 0x10000284, 0x03fff800, VECTOR_INSNS, "vsrw" },
+	{ 0x10000304, 0x03fff800, VECTOR_INSNS, "vsrab" },
+	{ 0x10000344, 0x03fff800, VECTOR_INSNS, "vsrah" },
+	{ 0x10000384, 0x03fff800, VECTOR_INSNS, "vsraw" },
+	{ 0x10000404, 0x03fff800, VECTOR_INSNS, "vand" },
+	{ 0x10000444, 0x03fff800, VECTOR_INSNS, "vandc" },
+	{ 0x10000484, 0x03fff800, VECTOR_INSNS, "vor" },
+	{ 0x100004c4, 0x03fff800, VECTOR_INSNS, "vxor" },
+	{ 0x10000504, 0x03fff800, VECTOR_INSNS, "vnor" },
+	{ 0x10000544, 0x03fff800, VECTOR_INSNS, "vorc" },
+	{ 0x10000584, 0x03fff800, VECTOR_INSNS, "vnand" },
+	{ 0x10000604, 0x03fff800, VECTOR_INSNS, "mfvscr" },
+	{ 0x10000644, 0x03fff800, VECTOR_INSNS, "mtvscr" },
+	{ 0x10000006, 0x03fffc00, VECTOR_INSNS, "vcmpequb[.]" },
+	{ 0x10000046, 0x03fffc00, VECTOR_INSNS, "vcmpequh[.]" },
+	{ 0x10000086, 0x03fffc00, VECTOR_INSNS, "vcmpequw[.]" },
+	{ 0x100000c7, 0x03fffc00, VECTOR_INSNS, "vcmpequd[.]" },
+	{ 0x10000206, 0x03fffc00, VECTOR_INSNS, "vcmpgtub[.]" },
+	{ 0x10000246, 0x03fffc00, VECTOR_INSNS, "vcmpgtuh[.]" },
+	{ 0x10000286, 0x03fffc00, VECTOR_INSNS, "vcmpgtuw[.]" },
+	{ 0x100002c7, 0x03fffc00, VECTOR_INSNS, "vcmpgtud[.]" },
+	{ 0x10000306, 0x03fffc00, VECTOR_INSNS, "vcmpgtsb[.]" },
+	{ 0x10000346, 0x03fffc00, VECTOR_INSNS, "vcmpgtsh[.]" },
+	{ 0x10000386, 0x03fffc00, VECTOR_INSNS, "vcmpgtsw[.]" },
+	{ 0x100003c7, 0x03fffc00, VECTOR_INSNS, "vcmpgtsd[.]" },
+	{ 0x1000000c, 0x03fff800, VECTOR_INSNS, "vmrghb" },
+	{ 0x1000004c, 0x03fff800, VECTOR_INSNS, "vmrghh" },
+	{ 0x1000008c, 0x03fff800, VECTOR_INSNS, "vmrghw" },
+	{ 0x1000010c, 0x03fff800, VECTOR_INSNS, "vmrglb" },
+	{ 0x1000014c, 0x03fff800, VECTOR_INSNS, "vmrglh" },
+	{ 0x1000018c, 0x03fff800, VECTOR_INSNS, "vmrglw" },
+	{ 0x1000020c, 0x03fff800, VECTOR_INSNS, "vspltb" },
+	{ 0x1000024c, 0x03fff800, VECTOR_INSNS, "vsplth" },
+	{ 0x1000028c, 0x03fff800, VECTOR_INSNS, "vspltw" },
+	{ 0x1000020c, 0x03fff800, VECTOR_INSNS, "vspltb" },
+	{ 0x1000024c, 0x03fff800, VECTOR_INSNS, "vsplth" },
+	{ 0x1000028c, 0x03fff800, VECTOR_INSNS, "vspltw" },
+	{ 0x1000030c, 0x03fff800, VECTOR_INSNS, "vspltisb" },
+	{ 0x1000034c, 0x03fff800, VECTOR_INSNS, "vspltish" },
+	{ 0x1000038c, 0x03fff800, VECTOR_INSNS, "vspltisw" },
+	{ 0x1000050c, 0x03fff800, VECTOR_INSNS, "vgbbd" },
+	{ 0x1000054c, 0x03fff800, VECTOR_INSNS, "vbpermq" },
+	{ 0x1000068c, 0x03fff800, VECTOR_INSNS, "vmrgow" },
+	{ 0x1000078c, 0x03fff800, VECTOR_INSNS, "vmrgew" },
+	{ 0x1000000e, 0x03fff800, VECTOR_INSNS, "vpkuhum" },
+	{ 0x1000004e, 0x03fff800, VECTOR_INSNS, "vpkuwum" },
+	{ 0x1000044e, 0x03fff800, VECTOR_INSNS, "vpkudum" },
+	{ 0x1000002a, 0x03ffffc0, VECTOR_INSNS, "vsel" },
+	{ 0x1000002b, 0x03ffffc0, VECTOR_INSNS, "vperm" },
+	{ 0x1000002c, 0x03ffffc0, VECTOR_INSNS, "vsldoi" },
+	{ 0x1000003b, 0x03ffffc0, VECTOR_INSNS, "vpermr" },
+	{ 0x7c00000c, 0x03fff800, VECTOR_INSNS, "lvsl" },
+	{ 0x7c00004c, 0x03fff800, VECTOR_INSNS, "lvsl" },
+	{ 0xf0000410, 0x03fff807, VSX_INSNS, "xxland" },
+	{ 0xf0000450, 0x03fff807, VSX_INSNS, "xxlandc" },
+	{ 0xf00005d0, 0x03fff807, VSX_INSNS, "xxleqv" },
+	{ 0xf0000590, 0x03fff807, VSX_INSNS, "xxlnand" },
+	{ 0xf0000550, 0x03fff807, VSX_INSNS, "xxlorc" },
+	{ 0xf0000510, 0x03fff807, VSX_INSNS, "xxlnor" },
+	{ 0xf0000490, 0x03fff807, VSX_INSNS, "xxlor" },
+	{ 0xf00004d0, 0x03fff807, VSX_INSNS, "xxlxor" },
+	{ 0xf0000050, 0x03fffb07, VSX_INSNS, "xxpermdi" },
+	{ 0x7c000066, 0x3ffff801, VSX_INSNS, "mfvsrd" },
+	{ 0x7c000266, 0x3ffff801, VSX_INSNS, "mfvsrld" },
+	{ 0x7c0000e6, 0x3ffff801, VSX_INSNS, "mfvsrwz" },
+	{ 0x7c000166, 0x3ffff801, VSX_INSNS, "mfvsrd" },
+	{ 0x7c0001a6, 0x3ffff801, VSX_INSNS, "mfvsrwa" },
+	{ 0x7c0001e6, 0x3ffff801, VSX_INSNS, "mfvsrwz" },
+	{ 0x7c000366, 0x3ffff801, VSX_INSNS, "mtvsrdd" },
+	{ 0x7c000326, 0x3ffff801, VSX_INSNS, "mtvsrws" },
 };
 #define NR_INSNS (sizeof(insns) / sizeof(struct insn))
 
-enum form_t { X, D, DS };
+enum form_t { X, XL, D, DS, DQ };
 
 struct ldst_insn {
 	uint32_t opcode;
@@ -354,10 +454,53 @@ static struct ldst_insn ldst_insns[] = {
 	{ 0xac000000, 0x03ffffff, D,  true,  2, 1, LDST_UPDATE, "lhau"},
 	{ 0x7c0002ee, 0x03fff801, X,  true,  2, 1, LDST_UPDATE, "lhaux"},
 	{ 0x7c0002ea, 0x03fff801, X,  true,  4, 1, LDST_UPDATE, "lwaux"},
-	{ 0x7c00056d, 0x03fff800, X,  false, 1, 1, true, "stbcx."},
-	{ 0x7c0005ad, 0x03fff800, X,  false, 2, 2, true, "sthcx."},
-	{ 0x7c00012d, 0x03fff800, X,  false, 4, 4, true, "stwcx."},
-	{ 0x7c0001ad, 0x03fff800, X,  false, 8, 8, true, "stdcx."},
+	{ 0x7c00056d, 0x03fff800, X,  false, 1, 1, STCOND_INSNS, "stbcx."},
+	{ 0x7c0005ad, 0x03fff800, X,  false, 2, 2, STCOND_INSNS, "sthcx."},
+	{ 0x7c00012d, 0x03fff800, X,  false, 4, 4, STCOND_INSNS, "stwcx."},
+	{ 0x7c0001ad, 0x03fff800, X,  false, 8, 8, STCOND_INSNS, "stdcx."},
+	{ 0x7c00000e, 0x03fff800, X,  false, 1, 1, VECTOR_INSNS, "lvebx" },
+	{ 0x7c00004e, 0x03fff800, X,  false, 2, 1, VECTOR_INSNS, "lvehx" },
+	{ 0x7c00008e, 0x03fff800, X,  false, 4, 1, VECTOR_INSNS, "lvewx" },
+	{ 0x7c0000ce, 0x03fff800, X,  false, 16, 1, VECTOR_INSNS, "lvx" },
+	{ 0x7c0002ce, 0x03fff800, X,  false, 16, 1, VECTOR_INSNS, "lvxl" },
+	{ 0x7c00010e, 0x03fff800, X,  false, 1, 1, VECTOR_INSNS, "stvebx" },
+	{ 0x7c00014e, 0x03fff800, X,  false, 2, 1, VECTOR_INSNS, "stvehx" },
+	{ 0x7c00018e, 0x03fff800, X,  false, 4, 1, VECTOR_INSNS, "stvewx" },
+	{ 0x7c0001ce, 0x03fff800, X,  false, 16, 1, VECTOR_INSNS, "stvx" },
+	{ 0x7c0003ce, 0x03fff800, X,  false, 16, 1, VECTOR_INSNS, "stvxl" },
+	{ 0xe4000002, 0x03fffffc, DS, false, 8, 1, VSX_INSNS, "lxsd" },
+	{ 0xe4000003, 0x03fffffc, DS, false, 4, 1, VSX_INSNS, "lxssp" },
+	{ 0xf4000001, 0x03fffff8, DQ, false, 16, 1, VSX_INSNS, "lxv" },
+	{ 0x7c000498, 0x03fff801, X, false, 8, 1, VSX_INSNS, "lxsdx" },
+	{ 0x7c00061a, 0x03fff801, X, false, 1, 1, VSX_INSNS, "lxsibzx" },
+	{ 0x7c00065a, 0x03fff801, X, false, 1, 1, VSX_INSNS, "lxsihzx" },
+	{ 0x7c000098, 0x03fff801, X, false, 1, 1, VSX_INSNS, "lxsiwax" },
+	{ 0x7c000018, 0x03fff801, X, false, 1, 1, VSX_INSNS, "lxsiwzx" },
+	{ 0x7c000418, 0x03fff801, X, false, 1, 1, VSX_INSNS, "lxsspx" },
+	{ 0x7c0006d8, 0x03fff801, X, false, 16, 1, VSX_INSNS, "lxvb16x" },
+	{ 0x7c000698, 0x03fff801, X, false, 16, 1, VSX_INSNS, "lxvd2x" },
+	{ 0x7c00021a, 0x03fff801, XL, false, 16, 1, VSX_INSNS, "lxvl" },
+	{ 0x7c00025a, 0x03fff801, XL, false, 16, 1, VSX_INSNS, "lxvll" },
+	{ 0x7c000218, 0x03fff841, X, false, 16, 1, VSX_INSNS, "lxvx" },
+	{ 0x7c000298, 0x03fff801, X, false, 8, 1, VSX_INSNS, "lxvdsx" },
+	{ 0x7c000658, 0x03fff801, X, false, 16, 1, VSX_INSNS, "lxvh8x" },
+	{ 0x7c000618, 0x03fff801, X, false, 16, 1, VSX_INSNS, "lxvw4x" },
+	{ 0x7c0002d8, 0x03fff801, X, false, 4, 1, VSX_INSNS, "lxvwsx" },
+	{ 0xf4000002, 0x03fffffc, DS, false, 8, 1, VSX_INSNS, "stxsd" },
+	{ 0xf4000003, 0x03fffffc, DS, false, 4, 1, VSX_INSNS, "stxssp" },
+	{ 0xf4000005, 0x03fffff8, DQ, false, 16, 1, VSX_INSNS, "stxv" },
+	{ 0x7c000598, 0x03fff801, X, false, 8, 1, VSX_INSNS, "stxsdx" },
+	{ 0x7c00071a, 0x03fff801, X, false, 1, 1, VSX_INSNS, "stxsibx" },
+	{ 0x7c00075a, 0x03fff801, X, false, 2, 1, VSX_INSNS, "stxsihx" },
+	{ 0x7c000118, 0x03fff801, X, false, 4, 1, VSX_INSNS, "stxsiwx" },
+	{ 0x7c000518, 0x03fff801, X, false, 4, 1, VSX_INSNS, "stxsspx" },
+	{ 0x7c0007d8, 0x03fff801, X, false, 16, 1, VSX_INSNS, "stxvb16x" },
+	{ 0x7c000798, 0x03fff801, X, false, 16, 1, VSX_INSNS, "stxvd2x" },
+	{ 0x7c000758, 0x03fff801, X, false, 16, 1, VSX_INSNS, "stxvh8x" },
+	{ 0x7c000718, 0x03fff801, X, false, 16, 1, VSX_INSNS, "stxvw4x" },
+	{ 0x7c00031a, 0x03fff801, XL, false, 16, 1, VSX_INSNS, "stxvl" },
+	{ 0x7c00035a, 0x03fff801, XL, false, 16, 1, VSX_INSNS, "stxvll" },
+	{ 0x7c000318, 0x03fff801, X, false, 16, 1, VSX_INSNS, "stxvx" },
 };
 #define NR_LDST_INSNS (sizeof(ldst_insns) / sizeof(struct ldst_insn))
 
@@ -402,6 +545,8 @@ static unsigned long fxvalues[] = {
 #define ORIS(RS, RA, UI)	(PPC_OPCODE(25) | PPC_RS(RS) | PPC_RA(RA) | ((UI) & 0xffff))
 #define ORI(RS, RA, UI)		(PPC_OPCODE(24) | PPC_RS(RS) | PPC_RA(RA) | ((UI) & 0xffff))
 #define STD(RS, RA, DS)		(PPC_OPCODE(62) | PPC_RS(RS) | PPC_RA(RA) | DS)
+#define STXV(RS, RA, DQ)	(PPC_OPCODE(61) | PPC_RS(RS & 0x1f) | PPC_RA(RA) | (DQ) | \
+				 ((RS >> 2) & 8) | 5)
 #define RLDICR(RA, RS, SH, ME)	(PPC_OPCODE(30) | PPC_RA(RA) | PPC_RS(RS) | PPC_SH(SH) | PPC_ME(ME) | 4)
 #define NOP			0x60000000
 
@@ -421,6 +566,7 @@ static void *do_one_loadstore(uint32_t *p, void *mem, struct ldst_insn *insnp,
 {
 	uint32_t insn = insnp->opcode;
 	uint64_t off;
+	uint32_t mask = insnp->mask;
 
 	/*
 	 * The preceding instruction might have been a BC+8, put a NOP here
@@ -430,7 +576,7 @@ static void *do_one_loadstore(uint32_t *p, void *mem, struct ldst_insn *insnp,
 
 	/* Form a small positive or negative offset */
 	*lfsr = mylfsr(32, *lfsr);
-	off = *lfsr % 32;
+	off = *lfsr % (MEM_SIZE / 2);
 
 	/* Align the offset */
 	off &= ~(insnp->align - 1);
@@ -438,9 +584,9 @@ static void *do_one_loadstore(uint32_t *p, void *mem, struct ldst_insn *insnp,
 	/* Use the high bit for the sign of the offset */
 	if (*lfsr & 0x80000000)
 		off = -off;
-	else if (off + insnp->size > 32)
+	else if (off + insnp->size > (MEM_SIZE / 2))
 		/* make sure we don't access outside our mem array */
-		off = 32 - insnp->size;
+		off = (MEM_SIZE / 2) - insnp->size;
 
 	if (insnp->form == X) {
 		uint8_t ra, rb, rt;
@@ -460,6 +606,27 @@ static void *do_one_loadstore(uint32_t *p, void *mem, struct ldst_insn *insnp,
 
 		p = load_64bit_imm(p, ra, off);
 		insn |= PPC_RT(rt) | PPC_RA(ra) | PPC_RB(rb);
+		mask &= ~0x03fff800;
+	} else if (insnp->form == XL) {
+		/* VSX load/store with length in RB top byte */
+		uint8_t ra, rb, rt;
+
+		*lfsr = mylfsr(32, *lfsr);
+		rb = *lfsr % 32;
+		ra = (rb + 1) % 32;
+		/* RA=0 uses address = 0, so use R1 */
+		if (ra == 0)
+			ra = 1;
+		rt = (ra + 1) % 32;
+
+		/* address has to go in RA */
+		p = load_64bit_imm(p, ra, (unsigned long)mem + off);
+
+		/* shift RB left 56 bits */
+		*p++ = RLDICR(rb, rb, 56, 7);
+
+		insn |= PPC_RT(rt) | PPC_RA(ra) | PPC_RB(rb);
+		mask &= ~0x03fff800;
 	} else {
 		uint8_t ra, rt;
 
@@ -474,9 +641,24 @@ static void *do_one_loadstore(uint32_t *p, void *mem, struct ldst_insn *insnp,
 
 		rt = (ra + 1) % 32;
 
+		if (insnp->form == DS) {
+			off &= 0xfffc;
+			mask &= ~0x03fffffc;
+		} else if (insnp->form == DQ) {
+			off &= 0xfff0;
+			mask &= ~0x03fffff0;
+		} else {
+			off &= 0xffff;
+			mask &= ~0x03ffffff;
+		}
 		p = load_64bit_imm(p, ra, (unsigned long)mem);
 
-		insn |= PPC_RT(rt) | PPC_RA(ra) | (off & 0xffff & insnp->mask);
+		insn |= PPC_RT(rt) | PPC_RA(ra) | off;
+	}
+	/* if any variable bits left, fill them in */
+	if (mask) {
+		*lfsr = mylfsr(32, *lfsr);
+		insn |= *lfsr & mask;
 	}
 
 	if (print_insns) {
@@ -516,6 +698,7 @@ void *generate_testcase(void *ptr, void *mem, void *save, unsigned long seed,
 	uint32_t *p;
 	uint32_t lfsr = seed;
 	void *orig_ptr = ptr;
+	unsigned long j;
 
 	/* LFSR needs a non zero value to work */
 	if (!lfsr)
@@ -548,6 +731,21 @@ void *generate_testcase(void *ptr, void *mem, void *save, unsigned long seed,
 
 		val = fxvalues[lfsr % NR_FXVALUES];
 		ptr = load_64bit_imm(ptr, i, val);
+	}
+
+	/* Initialize VSCR to 0, and VSRs from the GPRs */
+	if (VSX_INSNS) {
+		p = ptr;
+		/* vxor v0,v0,v0; mtvscr v0 */
+		*p++ = 0x100004c4;
+		*p++ = 0x10000644;
+		for (j = 0; j < 64; ++j) {
+			lfsr = mylfsr(32, lfsr);
+			/* generate mtvsrdd instruction from random RA/RB */
+			*p++ = PPC_OPCODE(31) | PPC_RT(j & 0x1f) | PPC_RB(lfsr & 0x3ff) |
+				(435 * 2) | (j >> 5);
+		}
+		ptr = p;
 	}
 
 	/* At this point we can start the test */
@@ -603,6 +801,12 @@ void *generate_testcase(void *ptr, void *mem, void *save, unsigned long seed,
 		/* Save GPR 0-31 to our save area */
 		for (unsigned long i = 0; i < 31; i++)
 			*p++ = STD(i, 31, i*sizeof(uint64_t));
+
+		/* Save VSR0-63 to our save area */
+		if (VSX_INSNS) {
+			for (j = 0; j < 64; ++j)
+				*p++ = STXV(j, 31, 288 + j * 16);
+		}
 		ptr = p;
 
 		/* Second epilog */
