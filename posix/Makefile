@@ -2,6 +2,7 @@ ARCH = $(shell uname -m)
 ifneq ("$(ARCH)", "ppc64")
 ifneq ("$(ARCH)", "ppc64le")
 	CROSS_COMPILE ?= powerpc64le-linux-
+	COPTS ?= -mno-vsx -mno-altivec
 endif
 endif
 
@@ -10,7 +11,7 @@ LD = $(CROSS_COMPILE)ld
 
 GIT_VERSION := "$(shell git describe --dirty --always --tags)"
 
-CFLAGS = -DVERSION=\"$(GIT_VERSION)\" -O2 -g -Wall -I../ -I../microrl
+CFLAGS = -DVERSION=\"$(GIT_VERSION)\" -O2 -g -Wall -I../ -I../microrl $(COPTS)
 ASFLAGS = $(CFLAGS)
 
 all: simple_random

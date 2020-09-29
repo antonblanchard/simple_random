@@ -112,6 +112,7 @@ long execute_testcase(void *insns, void *gprs, void *mem_ptr)
 void putchar_unbuffered(const char c)
 {
 	putchar(c);
+	fflush(stdout);
 }
 
 char getchar_unbuffered(void)
