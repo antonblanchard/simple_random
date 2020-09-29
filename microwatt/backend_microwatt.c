@@ -1,11 +1,12 @@
 #include <stdint.h>
 #include <string.h>
+#include <stdbool.h>
 #include "backend.h"
-#include "uart.h"
+#include "console.h"
 
 void init_console(void)
 {
-	potato_uart_init();
+	console_init();
 }
 
 void *init_testcase(unsigned long max_insns)
@@ -33,4 +34,14 @@ long execute_testcase(void *insns, void *gprs, void *mem_ptr)
 	func(gprs);
 	asm volatile("mfspr %0,268" : "=r" (tb_end));
 	return tb_end - tb_start;
+}
+
+char getchar_unbuffered(void)
+{
+	return getchar();
+}
+
+void putchar_unbuffered(const char c)
+{
+	putchar(c);
 }

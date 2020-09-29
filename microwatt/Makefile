@@ -5,13 +5,15 @@ ifneq ("$(ARCH)", "ppc64le")
 endif
 endif
 
+MICROWATT = ../..
+
 CC = $(CROSS_COMPILE)gcc
 LD = $(CROSS_COMPILE)ld
 OBJCOPY = $(CROSS_COMPILE)objcopy
 
 GIT_VERSION := "$(shell git describe --dirty --always --tags)"
 
-CFLAGS = -DVERSION=\"$(GIT_VERSION)\" -Os -g -Wall -msoft-float -mno-string -mno-multiple -mno-vsx -mno-altivec -mlittle-endian -mtraceback=no -fno-stack-protector -mstrict-align -ffreestanding -fdata-sections -ffunction-sections  -Ilibc/include -I../ -I../microrl
+CFLAGS = -DVERSION=\"$(GIT_VERSION)\" -Os -g -Wall -msoft-float -mno-string -mno-multiple -mno-vsx -mno-altivec -mlittle-endian -mtraceback=no -fno-stack-protector -mstrict-align -ffreestanding -fdata-sections -ffunction-sections  -Ilibc/include -I../ -I../microrl -I$(MICROWATT)/include -D__USE_LIBC
 ASFLAGS = $(CFLAGS)
 LDFLAGS = -N -T powerpc.lds --gc-sections
 
@@ -41,7 +43,10 @@ mystdio.o: ../mystdio.c ../mystdio.h
 microrl.o: ../microrl/microrl.c ../microrl/config.h ../microrl/microrl.h
 	$(CC) $(CFLAGS) -c $<
 
-simple_random.elf: simple_random.o generate.o head.o libc.o uart.o backend_microwatt.o helpers.o microrl.o mystdio.o
+console.o: $(MICROWATT)/lib/console.c
+	$(CC) $(CFLAGS) -c $<
+
+simple_random.elf: simple_random.o generate.o head.o libc.o console.o backend_microwatt.o helpers.o microrl.o mystdio.o
 	$(LD) $(LDFLAGS) -o $@ $^
 
 simple_random.bin: simple_random.elf
