@@ -483,11 +483,20 @@ int main(int argc, char *argv[])
 	insns_ptr = init_testcase(MAX_INSNS + SLACK);
 	mem_ptr = init_memory();
 
+	if (argc == 4 || argc == 3) {
+		unsigned long seed = strtoul(argv[1], NULL, 10);
+		unsigned long nr_insns = strtoul(argv[2], NULL, 10);
+		unsigned long nr_tests = argc > 3? strtoul(argv[3], NULL, 10): 1;
+
+		run_many_tests(seed, nr_insns, nr_tests);
+		exit(0);
+	}
+
 #if __STDC_HOSTED__ == 1
-	if (argc == 4) {
-		char *filename = argv[1];
-		unsigned long seed = strtoul(argv[2], NULL, 10);
-		unsigned long nr_insns = strtoul(argv[3], NULL, 10);
+	if (argc == 5 && argv[1][0] == '-') {
+		char *filename = argv[2];
+		unsigned long seed = strtoul(argv[3], NULL, 10);
+		unsigned long nr_insns = strtoul(argv[4], NULL, 10);
 
 		non_interactive(filename, seed, nr_insns);
 
