@@ -592,6 +592,22 @@ static void *load_64bit_imm(uint32_t *p, int gpr, uint64_t val)
 	return p;
 }
 
+static void print_insn(uint32_t insn, const char *name)
+{
+	const char *sep = " ";
+	long int i;
+
+	puthex(insn);
+	print(" ");
+	print(name);
+	for (i = 0; i < 4; ++i) {
+		print(sep);
+		putlong((insn >> (21 - i * 5)) & 0x1f);
+		sep = ",";
+	}
+	print("\r\n");
+}
+
 static void *do_one_loadstore(uint32_t *p, void *mem, struct ldst_insn *insnp,
 			      uint32_t *lfsr, bool print_insns)
 {
@@ -692,12 +708,8 @@ static void *do_one_loadstore(uint32_t *p, void *mem, struct ldst_insn *insnp,
 		insn |= *lfsr & mask;
 	}
 
-	if (print_insns) {
-		puthex(insn);
-		print(" ");
-		print(insnp->name);
-		print("\r\n");
-	}
+	if (print_insns)
+		print_insn(insn, insnp->name);
 
 	*p++ = insn;
 
@@ -801,12 +813,8 @@ void *generate_testcase(void *ptr, void *mem, void *save, unsigned long seed,
 			lfsr = mylfsr(32, lfsr);
 			insn = insns[j].opcode | (lfsr & insns[j].mask);
 
-			if (print_insns) {
-				puthex(insn);
-				print(" ");
-				print(insns[j].name);
-				print("\r\n");
-			}
+			if (print_insns)
+				print_insn(insn, insns[j].name);
 
 			*(uint32_t *)ptr = insn;
 			ptr += sizeof(uint32_t);
