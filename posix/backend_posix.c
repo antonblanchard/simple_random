@@ -112,7 +112,6 @@ long execute_testcase(void *insns, void *gprs, void *mem_ptr)
 void putchar_unbuffered(const char c)
 {
 	putchar(c);
-	fflush(stdout);
 }
 
 char getchar_unbuffered(void)
@@ -120,6 +119,7 @@ char getchar_unbuffered(void)
 	struct termios oldt, newt;
 	int ch;
 
+	fflush(stdout);
 	tcgetattr(STDIN_FILENO, &oldt);
 	newt = oldt;
 	newt.c_lflag &= ~(ICANON | ECHO);
