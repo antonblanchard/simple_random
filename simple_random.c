@@ -473,13 +473,6 @@ int main(int argc, char *argv[])
 {
 	init_console();
 
-	microrl_init(prl, microrl_print);
-	microrl_set_execute_callback(prl, execute);
-#ifdef _USE_COMPLETE
-	microrl_set_complete_callback (prl, microrl_complete);
-#endif
-	microrl_set_sigint_callback(prl, sigint);
-
 	insns_ptr = init_testcase(MAX_INSNS + SLACK);
 	mem_ptr = init_memory();
 
@@ -503,6 +496,13 @@ int main(int argc, char *argv[])
 		exit(0);
 	}
 #endif
+
+	microrl_init(prl, microrl_print);
+	microrl_set_execute_callback(prl, execute);
+#ifdef _USE_COMPLETE
+	microrl_set_complete_callback (prl, microrl_complete);
+#endif
+	microrl_set_sigint_callback(prl, sigint);
 
 	while (1)
 		microrl_insert_char(prl, getchar_unbuffered());
