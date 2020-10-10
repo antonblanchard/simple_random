@@ -33,7 +33,7 @@ static enum { JENKINS, XOR } hash_type = JENKINS;
 static void *insns_ptr;
 static void *mem_ptr;
 
-static const char *extra_names[4] = { "CR", "LR", "CTR", "XER" };
+static const char *extra_names[6] = { "CR", "LR", "CTR", "XER", "FPSCR", "VSCR" };
 
 static long run_one_test(unsigned long seed, unsigned long nr_insns,
 			 unsigned long *lenp)
@@ -55,7 +55,7 @@ static long run_one_test(unsigned long seed, unsigned long nr_insns,
 
 	if (registers) {
 		for (unsigned long i = 0; i < NGPRS; i++) {
-			if (i < 36) {
+			if (i < 38) {
 				if (i < 32)
 					putlong(i);
 				else
@@ -64,12 +64,12 @@ static long run_one_test(unsigned long seed, unsigned long nr_insns,
 				if (i != 31)
 					puthex(gprs[i]);
 			} else {
-				if (i < 100) {
+				if (i < 102) {
 					print("F");
-					putlong((i - 36) >> 1);
+					putlong((i - 38) >> 1);
 				} else {
 					print("V");
-					putlong((i - 100) >> 1);
+					putlong((i - 102) >> 1);
 				}
 				print(" ");
 				puthex(gprs[i+1]);

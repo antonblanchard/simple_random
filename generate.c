@@ -564,22 +564,28 @@ static unsigned long fxvalues[] = {
 };
 #define NR_FXVALUES (sizeof(fxvalues)/sizeof(fxvalues[0]))
 
-#define PPC_OPCODE(OPC)		((OPC) << 26)
+#define PPC_OPCODE(OPC)		((unsigned)(OPC) << 26)
 #define PPC_RT(RT)		((RT) << 21)
 #define PPC_RS(RS)		((RS) << 21)
+#define PPC_XS(XS)		(((XS) & 0x1f) << 21)
 #define PPC_RA(RA)		((RA) << 16)
 #define PPC_RB(RB)		((RB) << 11)
 #define PPC_SH(SH)		((((SH) >> 5) << 1) | (((SH) & 0x1f) << 11))
 #define PPC_ME(ME)		((((ME) >> 5) << 5) | (((ME) & 0x1f) << 6))
+#define PPC_SX(XS)		(((XS) >> 5) & 1)
+#define PPC_SX2(XS)		(((XS) >> 2) & 8)
 
 #define ADDIS(RT, RA, UI)	(PPC_OPCODE(15) | PPC_RS(RT) | PPC_RA(RA) | ((UI) & 0xffff))
 #define ORIS(RS, RA, UI)	(PPC_OPCODE(25) | PPC_RS(RS) | PPC_RA(RA) | ((UI) & 0xffff))
 #define ORI(RS, RA, UI)		(PPC_OPCODE(24) | PPC_RS(RS) | PPC_RA(RA) | ((UI) & 0xffff))
 #define STD(RS, RA, DS)		(PPC_OPCODE(62) | PPC_RS(RS) | PPC_RA(RA) | DS)
-#define STXV(RS, RA, DQ)	(PPC_OPCODE(61) | PPC_RS(RS & 0x1f) | PPC_RA(RA) | (DQ) | \
-				 ((RS >> 2) & 8) | 5)
+#define STFD(FRS, RA, D)	(PPC_OPCODE(54) | PPC_RS(FRS) | PPC_RA(RA) | D)
+#define STXV(XS, RA, DQ)	(PPC_OPCODE(61) | PPC_XS(XS) | PPC_RA(RA) | (DQ) | PPC_SX2(XS) | 5)
 #define RLDICR(RA, RS, SH, ME)	(PPC_OPCODE(30) | PPC_RA(RA) | PPC_RS(RS) | PPC_SH(SH) | PPC_ME(ME) | 4)
 #define NOP			0x60000000
+#define MFFS(FRT)		(PPC_OPCODE(63) | PPC_RT(FRT) | (583 << 1))
+#define MFVSCR(VRT)		(PPC_OPCODE(4)  | PPC_RT(VRT) | 1540)
+#define MFVSRLD(RA, XS)		(PPC_OPCODE(31) | PPC_XS(XS) | PPC_RA(RA) | (307 << 1) | PPC_SX(XS))
 
 static void *load_64bit_imm(uint32_t *p, int gpr, uint64_t val)
 {
@@ -841,10 +847,15 @@ void *generate_testcase(void *ptr, void *mem, void *save, unsigned long seed,
 		for (unsigned long i = 0; i < 31; i++)
 			*p++ = STD(i, 31, i*sizeof(uint64_t));
 
-		/* Save VSR0-63 to our save area */
+		/* Save VSR0-63, FPSCR, VSCR to our save area */
 		if (VSX_INSNS) {
 			for (j = 0; j < 64; ++j)
-				*p++ = STXV(j, 31, 288 + j * 16);
+				*p++ = STXV(j, 31, 38 * sizeof(uint64_t) + j * 16);
+			*p++ = MFFS(0);
+			*p++ = STFD(0, 31, 36 * sizeof(uint64_t));
+			*p++ = MFVSCR(0);
+			*p++ = MFVSRLD(0, 32);
+			*p++ = STD(0, 31, 37 * sizeof(uint64_t));
 		}
 		ptr = p;
 
