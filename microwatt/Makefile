@@ -14,7 +14,9 @@ OBJCOPY = $(CROSS_COMPILE)objcopy
 
 GIT_VERSION := "$(shell git describe --dirty --always --tags)"
 
-CFLAGS = -DVERSION=\"$(GIT_VERSION)\" -Os -g -Wall -msoft-float -mno-string -mno-multiple -mno-vsx -mno-altivec -mlittle-endian -mtraceback=no -fno-stack-protector -mstrict-align -ffreestanding -fdata-sections -ffunction-sections  -Ilibc/include -I../ -I../microrl -I$(MICROWATT)/include -D__USE_LIBC
+#CFLAGS_TARGET = -mbig-endian -m32
+
+CFLAGS = -DVERSION=\"$(GIT_VERSION)\" -Os -g -Wall $(CFLAGS_TARGET) -msoft-float -mno-string -mno-multiple -mno-vsx -mno-altivec -mtraceback=no -fno-stack-protector -mstrict-align -ffreestanding -fdata-sections -ffunction-sections  -Ilibc/include -I../ -I../microrl -I$(MICROWATT)/include -D__USE_LIBC
 ASFLAGS = $(CFLAGS)
 LDFLAGS = -N -T powerpc.lds --gc-sections
 

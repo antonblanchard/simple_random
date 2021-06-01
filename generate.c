@@ -13,6 +13,12 @@
 #include <stdio.h>
 #endif
 
+#ifdef __powerpc64__
+#define SIXTYFOUR_INSNS	true
+#else
+#define SIXTYFOUR_INSNS	false
+#endif
+
 #define OVERFLOW_INSNS	true
 #define DIVIDE_INSNS	true
 #define CARRY_INSNS	true
@@ -21,7 +27,7 @@
 #define CRLOGICAL_INSNS true
 #define MTFXER_INSNS	true
 #define VECTOR_INSNS	true
-#define VSX_INSNS	true
+#define VSX_INSNS	(true && SIXTYFOUR_INSNS)
 #define STCOND_INSNS	false
 
 struct insn {
@@ -111,84 +117,84 @@ static struct insn insns[] = {
 	{ 0x7c000775, 0x03fff800, true, "extsb_rc"},
 	{ 0x7c000734, 0x03fff800, true, "extsh"},
 	{ 0x7c000735, 0x03fff800, true, "extsh_rc"},
-	{ 0x7c0007b4, 0x03fff800, true, "extsw"},
-	{ 0x7c0007b5, 0x03fff800, true, "extsw_rc"},
-	{ 0x7c0006f4, 0x03fff802, false, "extswsli"},
-	{ 0x7c0006f5, 0x03fff802, false, "extswsli_rc"},
+	{ 0x7c0007b4, 0x03fff800, SIXTYFOUR_INSNS, "extsw"},
+	{ 0x7c0007b5, 0x03fff800, SIXTYFOUR_INSNS, "extsw_rc"},
+	{ 0x7c0006f4, 0x03fff802, false && SIXTYFOUR_INSNS, "extswsli"},
+	{ 0x7c0006f5, 0x03fff802, false && SIXTYFOUR_INSNS, "extswsli_rc"},
 
 	/* Count leading/trailing zeroes */
 	{ 0x7c000034, 0x03fff800, true, "cntlzw"},
 	{ 0x7c000035, 0x03fff800, true, "cntlzw_rc"},
 	{ 0x7c000434, 0x03fff800, true, "cnttzw"},
 	{ 0x7c000435, 0x03fff800, true, "cnttzw_rc"},
-	{ 0x7c000074, 0x03fff800, true, "cntlzd"},
-	{ 0x7c000075, 0x03fff800, true, "cntlzd_rc"},
-	{ 0x7c000474, 0x03fff800, true, "cnttzd"},
-	{ 0x7c000475, 0x03fff800, true, "cnttzd_rc"},
+	{ 0x7c000074, 0x03fff800, SIXTYFOUR_INSNS, "cntlzd"},
+	{ 0x7c000075, 0x03fff800, SIXTYFOUR_INSNS, "cntlzd_rc"},
+	{ 0x7c000474, 0x03fff800, SIXTYFOUR_INSNS, "cnttzd"},
+	{ 0x7c000475, 0x03fff800, SIXTYFOUR_INSNS, "cnttzd_rc"},
 
 	/* Rotate and shift ops */
-	{ 0x78000010, 0x03ffffe0, true, "rldcl"},
-	{ 0x78000011, 0x03ffffe0, true, "rldcl_rc"},
-	{ 0x78000012, 0x03ffffe0, true, "rldcr"},
-	{ 0x78000013, 0x03ffffe0, true, "rldcr_rc"},
-	{ 0x78000000, 0x03ffffe2, true, "rldicl"},
-	{ 0x78000001, 0x03ffffe2, true, "rldicl_rc"},
-	{ 0x78000004, 0x03ffffe2, true, "rldicr"},
-	{ 0x78000005, 0x03ffffe2, true, "rldicr_rc"},
-	{ 0x78000008, 0x03ffffe2, true, "rldic"},
-	{ 0x78000009, 0x03ffffe2, true, "rldic_rc"},
+	{ 0x78000010, 0x03ffffe0, SIXTYFOUR_INSNS, "rldcl"},
+	{ 0x78000011, 0x03ffffe0, SIXTYFOUR_INSNS, "rldcl_rc"},
+	{ 0x78000012, 0x03ffffe0, SIXTYFOUR_INSNS, "rldcr"},
+	{ 0x78000013, 0x03ffffe0, SIXTYFOUR_INSNS, "rldcr_rc"},
+	{ 0x78000000, 0x03ffffe2, SIXTYFOUR_INSNS, "rldicl"},
+	{ 0x78000001, 0x03ffffe2, SIXTYFOUR_INSNS, "rldicl_rc"},
+	{ 0x78000004, 0x03ffffe2, SIXTYFOUR_INSNS, "rldicr"},
+	{ 0x78000005, 0x03ffffe2, SIXTYFOUR_INSNS, "rldicr_rc"},
+	{ 0x78000008, 0x03ffffe2, SIXTYFOUR_INSNS, "rldic"},
+	{ 0x78000009, 0x03ffffe2, SIXTYFOUR_INSNS, "rldic_rc"},
 	{ 0x5c000000, 0x03fffffe, true, "rlwnm"},
 	{ 0x5c000001, 0x03fffffe, true, "rlwnm_rc"},
 	{ 0x54000000, 0x03fffffe, true, "rlwinm"},
 	{ 0x54000001, 0x03fffffe, true, "rlwinm_rc"},
-	{ 0x7800000c, 0x03ffffe2, true, "rldimi"},
-	{ 0x7800000d, 0x03ffffe2, true, "rldimi_rc"},
+	{ 0x7800000c, 0x03ffffe2, SIXTYFOUR_INSNS, "rldimi"},
+	{ 0x7800000d, 0x03ffffe2, SIXTYFOUR_INSNS, "rldimi_rc"},
 	{ 0x50000000, 0x03fffffe, true, "rlwimi"},
 	{ 0x50000001, 0x03fffffe, true, "rlwimi_rc"},
 	{ 0x7c000030, 0x03fff800, true, "slw"},
 	{ 0x7c000031, 0x03fff800, true, "slw_rc"},
-	{ 0x7c000036, 0x03fff800, true, "sld"},
-	{ 0x7c000037, 0x03fff800, true, "sld_rc"},
-	{ 0x7c000634, 0x03fff800, CARRY_INSNS, "srad"},
-	{ 0x7c000635, 0x03fff800, CARRY_INSNS, "srad_rc"},
-	{ 0x7c000674, 0x03fff802, CARRY_INSNS, "sradi"},
-	{ 0x7c000675, 0x03fff802, CARRY_INSNS, "sradi_rc"},
+	{ 0x7c000036, 0x03fff800, SIXTYFOUR_INSNS, "sld"},
+	{ 0x7c000037, 0x03fff800, SIXTYFOUR_INSNS, "sld_rc"},
+	{ 0x7c000634, 0x03fff800, CARRY_INSNS && SIXTYFOUR_INSNS, "srad"},
+	{ 0x7c000635, 0x03fff800, CARRY_INSNS && SIXTYFOUR_INSNS, "srad_rc"},
+	{ 0x7c000674, 0x03fff802, CARRY_INSNS && SIXTYFOUR_INSNS, "sradi"},
+	{ 0x7c000675, 0x03fff802, CARRY_INSNS && SIXTYFOUR_INSNS, "sradi_rc"},
 	{ 0x7c000630, 0x03fff800, CARRY_INSNS, "sraw"},
 	{ 0x7c000631, 0x03fff800, CARRY_INSNS, "sraw_rc"},
 	{ 0x7c000670, 0x03fff800, CARRY_INSNS, "srawi"},
 	{ 0x7c000671, 0x03fff800, CARRY_INSNS, "srawi_rc"},
-	{ 0x7c000436, 0x03fff800, true, "srd"},
-	{ 0x7c000437, 0x03fff800, true, "srd_rc"},
+	{ 0x7c000436, 0x03fff800, SIXTYFOUR_INSNS, "srd"},
+	{ 0x7c000437, 0x03fff800, SIXTYFOUR_INSNS, "srd_rc"},
 	{ 0x7c000430, 0x03fff800, true, "srw"},
 	{ 0x7c000431, 0x03fff800, true, "srw_rc"},
 
 	/* Population count ops */
 	{ 0x7c0000f4, 0x03fff801, true, "popcntb"},
-	{ 0x7c0003f4, 0x03fff801, true, "popcntd"},
+	{ 0x7c0003f4, 0x03fff801, SIXTYFOUR_INSNS, "popcntd"},
 	{ 0x7c0002f4, 0x03fff801, true, "popcntw"},
 
 	/* Multiply ops */
 	/* NB this generates reserved forms with OE=1 for mulh* */
-	{ 0x7c000092, 0x03fffc00, true, "mulhd"},
-	{ 0x7c000093, 0x03fffc00, true, "mulhd_rc"},
-	{ 0x7c000012, 0x03fffc00, true, "mulhdu"},
-	{ 0x7c000013, 0x03fffc00, true, "mulhdu_rc"},
+	{ 0x7c000092, 0x03fffc00, SIXTYFOUR_INSNS, "mulhd"},
+	{ 0x7c000093, 0x03fffc00, SIXTYFOUR_INSNS, "mulhd_rc"},
+	{ 0x7c000012, 0x03fffc00, SIXTYFOUR_INSNS, "mulhdu"},
+	{ 0x7c000013, 0x03fffc00, SIXTYFOUR_INSNS, "mulhdu_rc"},
 	{ 0x7c000096, 0x03fffc00, true, "mulhw"},
 	{ 0x7c000097, 0x03fffc00, true, "mulhw_rc"},
 	{ 0x7c000016, 0x03fffc00, true, "mulhwu"},
 	{ 0x7c000017, 0x03fffc00, true, "mulhwu_rc"},
 	{ 0x1c000000, 0x03ffffff, true, "mulli"},
-	{ 0x7c0001d2, 0x03fff800, true, "mulld"},
-	{ 0x7c0001d3, 0x03fff800, true, "mulld_rc"},
+	{ 0x7c0001d2, 0x03fff800, SIXTYFOUR_INSNS, "mulld"},
+	{ 0x7c0001d3, 0x03fff800, SIXTYFOUR_INSNS, "mulld_rc"},
 	{ 0x7c0001d6, 0x03fff800, true, "mullw"},
 	{ 0x7c0001d7, 0x03fff800, true, "mullw_rc"},
-	{ 0x7c0005d2, 0x03fff800, OVERFLOW_INSNS, "mulldo"},
-	{ 0x7c0005d3, 0x03fff800, OVERFLOW_INSNS, "mulldo_rc"},
+	{ 0x7c0005d2, 0x03fff800, SIXTYFOUR_INSNS && OVERFLOW_INSNS, "mulldo"},
+	{ 0x7c0005d3, 0x03fff800, SIXTYFOUR_INSNS && OVERFLOW_INSNS, "mulldo_rc"},
 	{ 0x7c0005d6, 0x03fff800, OVERFLOW_INSNS, "mullwo"},
 	{ 0x7c0005d7, 0x03fff800, OVERFLOW_INSNS, "mullwo_rc"},
-	{ 0x10000030, 0x03ffffc0, false, "maddhd"},
-	{ 0x10000031, 0x03ffffc0, false, "maddhdu"},
-	{ 0x10000033, 0x03ffffc0, false, "maddld"},
+	{ 0x10000030, 0x03ffffc0, false && SIXTYFOUR_INSNS, "maddhd"},
+	{ 0x10000031, 0x03ffffc0, false && SIXTYFOUR_INSNS, "maddhdu"},
+	{ 0x10000033, 0x03ffffc0, false && SIXTYFOUR_INSNS, "maddld"},
 
 	/* SPR read/write ops */
 	{ 0x7c0903a6, 0x03e00001, true, "mtspr_ctr"},
@@ -234,14 +240,14 @@ static struct insn insns[] = {
 	{ 0x4c000182, 0x03fff801, CRLOGICAL_INSNS, "crxor"},
 
 	/* Divide and mod */
-	{ 0x7c0003d2, 0x03fff800, DIVIDE_INSNS, "divd"},
-	{ 0x7c000352, 0x03fff800, DIVIDE_INSNS, "divde"},
-	{ 0x7c000353, 0x03fff800, DIVIDE_INSNS, "divde_rc"},
-	{ 0x7c000312, 0x03fff800, DIVIDE_INSNS, "divdeu"},
-	{ 0x7c000313, 0x03fff800, DIVIDE_INSNS, "divdeu_rc"},
-	{ 0x7c0003d3, 0x03fff800, DIVIDE_INSNS, "divd_rc"},
-	{ 0x7c000392, 0x03fff800, DIVIDE_INSNS, "divdu"},
-	{ 0x7c000393, 0x03fff800, DIVIDE_INSNS, "divdu_rc"},
+	{ 0x7c0003d2, 0x03fff800, SIXTYFOUR_INSNS && DIVIDE_INSNS, "divd"},
+	{ 0x7c000352, 0x03fff800, SIXTYFOUR_INSNS && DIVIDE_INSNS, "divde"},
+	{ 0x7c000353, 0x03fff800, SIXTYFOUR_INSNS && DIVIDE_INSNS, "divde_rc"},
+	{ 0x7c000312, 0x03fff800, SIXTYFOUR_INSNS && DIVIDE_INSNS, "divdeu"},
+	{ 0x7c000313, 0x03fff800, SIXTYFOUR_INSNS && DIVIDE_INSNS, "divdeu_rc"},
+	{ 0x7c0003d3, 0x03fff800, SIXTYFOUR_INSNS && DIVIDE_INSNS, "divd_rc"},
+	{ 0x7c000392, 0x03fff800, SIXTYFOUR_INSNS && DIVIDE_INSNS, "divdu"},
+	{ 0x7c000393, 0x03fff800, SIXTYFOUR_INSNS && DIVIDE_INSNS, "divdu_rc"},
 	{ 0x7c0003d6, 0x03fff800, DIVIDE_INSNS, "divw"},
 	{ 0x7c000356, 0x03fff800, DIVIDE_INSNS, "divwe"},
 	{ 0x7c000357, 0x03fff800, DIVIDE_INSNS, "divwe_rc"},
@@ -250,20 +256,20 @@ static struct insn insns[] = {
 	{ 0x7c0003d7, 0x03fff800, DIVIDE_INSNS, "divw_rc"},
 	{ 0x7c000396, 0x03fff800, DIVIDE_INSNS, "divwu"},
 	{ 0x7c000397, 0x03fff800, DIVIDE_INSNS, "divwu_rc"},
-	{ 0x7c000612, 0x03fff801, DIVIDE_INSNS, "modsd"},
+	{ 0x7c000612, 0x03fff801, SIXTYFOUR_INSNS && DIVIDE_INSNS, "modsd"},
 	{ 0x7c000616, 0x03fff801, DIVIDE_INSNS, "modsw"},
-	{ 0x7c000212, 0x03fff801, DIVIDE_INSNS, "modud"},
+	{ 0x7c000212, 0x03fff801, SIXTYFOUR_INSNS && DIVIDE_INSNS, "modud"},
 	{ 0x7c000216, 0x03fff801, DIVIDE_INSNS, "moduw"},
 
 	/* Divide instructions with OE=1 */
-	{ 0x7c0007d2, 0x03fff800, OVERFLOW_INSNS && DIVIDE_INSNS, "divdo"},
-	{ 0x7c000752, 0x03fff800, OVERFLOW_INSNS && DIVIDE_INSNS, "divdeo"},
-	{ 0x7c000753, 0x03fff800, OVERFLOW_INSNS && DIVIDE_INSNS, "divdeo_rc"},
-	{ 0x7c000712, 0x03fff800, OVERFLOW_INSNS && DIVIDE_INSNS, "divdeuo"},
-	{ 0x7c000713, 0x03fff800, OVERFLOW_INSNS && DIVIDE_INSNS, "divdeuo_rc"},
-	{ 0x7c0007d3, 0x03fff800, OVERFLOW_INSNS && DIVIDE_INSNS, "divdo_rc"},
-	{ 0x7c000792, 0x03fff800, OVERFLOW_INSNS && DIVIDE_INSNS, "divduo"},
-	{ 0x7c000793, 0x03fff800, OVERFLOW_INSNS && DIVIDE_INSNS, "divduo_rc"},
+	{ 0x7c0007d2, 0x03fff800, SIXTYFOUR_INSNS && OVERFLOW_INSNS && DIVIDE_INSNS, "divdo"},
+	{ 0x7c000752, 0x03fff800, SIXTYFOUR_INSNS && OVERFLOW_INSNS && DIVIDE_INSNS, "divdeo"},
+	{ 0x7c000753, 0x03fff800, SIXTYFOUR_INSNS && OVERFLOW_INSNS && DIVIDE_INSNS, "divdeo_rc"},
+	{ 0x7c000712, 0x03fff800, SIXTYFOUR_INSNS && OVERFLOW_INSNS && DIVIDE_INSNS, "divdeuo"},
+	{ 0x7c000713, 0x03fff800, SIXTYFOUR_INSNS && OVERFLOW_INSNS && DIVIDE_INSNS, "divdeuo_rc"},
+	{ 0x7c0007d3, 0x03fff800, SIXTYFOUR_INSNS && OVERFLOW_INSNS && DIVIDE_INSNS, "divdo_rc"},
+	{ 0x7c000792, 0x03fff800, SIXTYFOUR_INSNS && OVERFLOW_INSNS && DIVIDE_INSNS, "divduo"},
+	{ 0x7c000793, 0x03fff800, SIXTYFOUR_INSNS && OVERFLOW_INSNS && DIVIDE_INSNS, "divduo_rc"},
 	{ 0x7c0007d6, 0x03fff800, OVERFLOW_INSNS && DIVIDE_INSNS, "divwo"},
 	{ 0x7c000756, 0x03fff800, OVERFLOW_INSNS && DIVIDE_INSNS, "divweo"},
 	{ 0x7c000757, 0x03fff800, OVERFLOW_INSNS && DIVIDE_INSNS, "divweo_rc"},
@@ -274,12 +280,12 @@ static struct insn insns[] = {
 	{ 0x7c000797, 0x03fff800, OVERFLOW_INSNS && DIVIDE_INSNS, "divwuo_rc"},
 
 	/* Parity ops */
-	{ 0x7c000174, 0x03fff801, true, "prtyd"},
+	{ 0x7c000174, 0x03fff801, SIXTYFOUR_INSNS, "prtyd"},
 	{ 0x7c000134, 0x03fff801, true, "prtyw"},
 
 	/* Other misc ops */
 	{ 0x7c0003f8, 0x03fff801, true, "cmpb"},
-	{ 0x7c0001f8, 0x03fff801, false, "bpermd"},
+	{ 0x7c0001f8, 0x03fff801, false && SIXTYFOUR_INSNS, "bpermd"},
 
 	/* Cache control ops */
 	{ 0x7c0007ac, 0x03fff801, false, "icbi"},
@@ -288,8 +294,8 @@ static struct insn insns[] = {
 	{ 0x7c0004ac, 0x03bff801, true, "sync"},
 
 	/* Trap ops */
-	{ 0x08000000, 0x03ffffff, false, "tdi_ti"},
-	{ 0x7c000088, 0x03fff801, false, "td_ti"},
+	{ 0x08000000, 0x03ffffff, false && SIXTYFOUR_INSNS, "tdi_ti"},
+	{ 0x7c000088, 0x03fff801, false && SIXTYFOUR_INSNS, "td_ti"},
 	{ 0x7c000008, 0x03fff801, false, "tw"},
 	{ 0x0c000000, 0x03ffffff, false, "twi"},
 
@@ -454,9 +460,9 @@ struct ldst_insn {
 static struct ldst_insn ldst_insns[] = {
 	{ 0x88000000, 0x03ffffff, D,  false, 1, 1, true, "lbz"},
 	{ 0x7c0000ae, 0x03fff801, X,  false, 1, 1, true, "lbzx"},
-	{ 0xe8000000, 0x03fffffc, DS, false, 8, 4, true, "ld"},
-	{ 0x7c000428, 0x03fff801, X,  false, 8, 1, true, "ldbrx"},
-	{ 0x7c00002a, 0x03fff801, X,  false, 8, 1, true, "ldx"},
+	{ 0xe8000000, 0x03fffffc, DS, false, 8, 4, SIXTYFOUR_INSNS, "ld"},
+	{ 0x7c000428, 0x03fff801, X,  false, 8, 1, SIXTYFOUR_INSNS, "ldbrx"},
+	{ 0x7c00002a, 0x03fff801, X,  false, 8, 1, SIXTYFOUR_INSNS, "ldx"},
 	{ 0x7c00062c, 0x03fff801, X,  false, 2, 1, true, "lhbrx"},
 	{ 0xa0000000, 0x03ffffff, D,  false, 2, 1, true, "lhz"},
 	{ 0x7c00022e, 0x03fff801, X,  false, 2, 1, true, "lhzx"},
@@ -465,9 +471,9 @@ static struct ldst_insn ldst_insns[] = {
 	{ 0x7c00002e, 0x03fff801, X,  false, 4, 1, true, "lwzx"},
 	{ 0x98000000, 0x03ffffff, D,  false, 1, 1, true, "stb"},
 	{ 0x7c0001ae, 0x03fff801, X,  false, 1, 1, true, "stbx"},
-	{ 0xf8000000, 0x03fffffc, DS, false, 8, 4, true, "std"},
-	{ 0x7c000528, 0x03fff801, X,  false, 8, 1, true, "stdbrx"},
-	{ 0x7c00012a, 0x03fff801, X,  false, 8, 1, true, "stdx"},
+	{ 0xf8000000, 0x03fffffc, DS, false, 8, 4, SIXTYFOUR_INSNS, "std"},
+	{ 0x7c000528, 0x03fff801, X,  false, 8, 1, SIXTYFOUR_INSNS, "stdbrx"},
+	{ 0x7c00012a, 0x03fff801, X,  false, 8, 1, SIXTYFOUR_INSNS, "stdx"},
 	{ 0xb0000000, 0x03ffffff, D,  false, 2, 1, true, "sth"},
 	{ 0x7c00072c, 0x03fff801, X,  false, 2, 1, true, "sthbrx"},
 	{ 0x7c00032e, 0x03fff801, X,  false, 2, 1, true, "sthx"},
@@ -477,9 +483,9 @@ static struct ldst_insn ldst_insns[] = {
 	{ 0x7c000068, 0x03fff801, X,  false, 1, 1, true, "lbarx"},
 	{ 0x7c0000e8, 0x03fff801, X,  false, 2, 2, true, "lharx"},
 	{ 0x7c000028, 0x03fff801, X,  false, 4, 4, true, "lwarx"},
-	{ 0x7c0000a8, 0x03fff801, X,  false, 8, 8, true, "ldarx"},
-	{ 0xe8000001, 0x03fffffc, DS, true,  8, 4, LDST_UPDATE, "ldu"},
-	{ 0x7c00006a, 0x03fff801, X,  true,  8, 1, LDST_UPDATE, "ldux"},
+	{ 0x7c0000a8, 0x03fff801, X,  false, 8, 8, SIXTYFOUR_INSNS, "ldarx"},
+	{ 0xe8000001, 0x03fffffc, DS, true,  8, 4, SIXTYFOUR_INSNS && LDST_UPDATE, "ldu"},
+	{ 0x7c00006a, 0x03fff801, X,  true,  8, 1, SIXTYFOUR_INSNS && LDST_UPDATE, "ldux"},
 	{ 0xa8000000, 0x03ffffff, D,  false, 2, 1, true, "lha"},
 	{ 0x7c0002ae, 0x03fff801, X,  false, 2, 1, true, "lhax"},
 	{ 0xe8000002, 0x03fffffc, DS, false, 4, 4, true, "lwa"},
@@ -490,8 +496,8 @@ static struct ldst_insn ldst_insns[] = {
 	{ 0x7c0001ee, 0x03fff801, X,  true,  1, 1, LDST_UPDATE, "stbux"},
 	{ 0xb4000000, 0x03ffffff, D,  true,  2, 1, LDST_UPDATE, "sthu"},
 	{ 0x7c00036e, 0x03fff801, X,  true,  2, 1, LDST_UPDATE, "sthux"},
-	{ 0xf8000001, 0x03fffffc, DS, true,  8, 1, LDST_UPDATE, "stdu"},
-	{ 0x7c00016a, 0x03fff801, X,  true,  8, 1, LDST_UPDATE, "stdux"},
+	{ 0xf8000001, 0x03fffffc, DS, true,  8, 1, SIXTYFOUR_INSNS && LDST_UPDATE, "stdu"},
+	{ 0x7c00016a, 0x03fff801, X,  true,  8, 1, SIXTYFOUR_INSNS && LDST_UPDATE, "stdux"},
 	{ 0x8c000000, 0x03ffffff, D,  true,  1, 1, LDST_UPDATE, "lbzu"},
 	{ 0x7c0000ee, 0x03fff801, X,  true,  1, 1, LDST_UPDATE, "lbzux"},
 	{ 0xa4000000, 0x03ffffff, D,  true,  2, 1, LDST_UPDATE, "lhzu"},
@@ -504,7 +510,7 @@ static struct ldst_insn ldst_insns[] = {
 	{ 0x7c00056d, 0x03fff800, X,  false, 1, 1, STCOND_INSNS, "stbcx."},
 	{ 0x7c0005ad, 0x03fff800, X,  false, 2, 2, STCOND_INSNS, "sthcx."},
 	{ 0x7c00012d, 0x03fff800, X,  false, 4, 4, STCOND_INSNS, "stwcx."},
-	{ 0x7c0001ad, 0x03fff800, X,  false, 8, 8, STCOND_INSNS, "stdcx."},
+	{ 0x7c0001ad, 0x03fff800, X,  false, 8, 8, SIXTYFOUR_INSNS && STCOND_INSNS, "stdcx."},
 	{ 0x7c00000e, 0x03fff800, X,  false, 1, 1, VECTOR_INSNS, "lvebx" },
 	{ 0x7c00004e, 0x03fff800, X,  false, 2, 1, VECTOR_INSNS, "lvehx" },
 	{ 0x7c00008e, 0x03fff800, X,  false, 4, 1, VECTOR_INSNS, "lvewx" },
@@ -551,7 +557,7 @@ static struct ldst_insn ldst_insns[] = {
 };
 #define NR_LDST_INSNS (sizeof(ldst_insns) / sizeof(struct ldst_insn))
 
-static unsigned long fxvalues[] = {
+static uint64_t fxvalues[] = {
 	0x0000000000000000,	/* all zeros */
 	0xFFFFFFFFFFFFFFFF,	/* all ones */
 	0x0000000000000001,	/* one */
@@ -595,6 +601,7 @@ static unsigned long fxvalues[] = {
 #define ORIS(RS, RA, UI)	(PPC_OPCODE(25) | PPC_RS(RS) | PPC_RA(RA) | ((UI) & 0xffff))
 #define ORI(RS, RA, UI)		(PPC_OPCODE(24) | PPC_RS(RS) | PPC_RA(RA) | ((UI) & 0xffff))
 #define STD(RS, RA, DS)		(PPC_OPCODE(62) | PPC_RS(RS) | PPC_RA(RA) | DS)
+#define STW(RS, RA, DS)		(PPC_OPCODE(36) | PPC_RS(RS) | PPC_RA(RA) | D)
 #define STFD(FRS, RA, D)	(PPC_OPCODE(54) | PPC_RS(FRS) | PPC_RA(RA) | D)
 #define STXV(XS, RA, DQ)	(PPC_OPCODE(61) | PPC_XS(XS) | PPC_RA(RA) | (DQ) | PPC_SX2(XS) | 5)
 #define RLDICR(RA, RS, SH, ME)	(PPC_OPCODE(30) | PPC_RA(RA) | PPC_RS(RS) | PPC_SH(SH) | PPC_ME(ME) | 4)
@@ -603,23 +610,27 @@ static unsigned long fxvalues[] = {
 #define MFVSCR(VRT)		(PPC_OPCODE(4)  | PPC_RT(VRT) | 1540)
 #define MFVSRLD(RA, XS)		(PPC_OPCODE(31) | PPC_XS(XS) | PPC_RA(RA) | (307 << 1) | PPC_SX(XS))
 
-static void *load_64bit_imm(uint32_t *p, int gpr, uint64_t val)
+static void *load_reg_imm(uint32_t *p, int gpr, reg_t val)
 {
+#if SIXTYFOUR_INSNS
 	*p++ = ADDIS(gpr, 0, (val >> 48) & 0xffff);
 	*p++ = ORI(gpr, gpr, (val >> 32) & 0xffff);
 	*p++ = RLDICR(gpr, gpr, 32, 31);
 	*p++ = ORIS(gpr, gpr, (val >> 16) & 0xffff);
+#else
+	*p++ = ADDIS(gpr, 0, (val >> 16) & 0xffff);
+#endif
 	*p++ = ORI(gpr, gpr, val & 0xffff);
 
 	return p;
 }
 
-static void print_insn(uint32_t insn, const char *name)
+static void print_insn(uint32_t insn, const char *name, unsigned long addr)
 {
 	const char *sep = " ";
 	long int i;
 
-	puthex(insn);
+	puthexn(insn, 8);
 	print(" ");
 	print(name);
 	for (i = 0; i < 4; ++i) {
@@ -627,6 +638,8 @@ static void print_insn(uint32_t insn, const char *name)
 		putlong((insn >> (21 - i * 5)) & 0x1f);
 		sep = ",";
 	}
+	print(" @");
+	puthexn(addr, 8);
 	print("\r\n");
 }
 
@@ -634,7 +647,7 @@ static void *do_one_loadstore(uint32_t *p, void *mem, struct ldst_insn *insnp,
 			      uint32_t *lfsr, bool print_insns)
 {
 	uint32_t insn = insnp->opcode;
-	uint64_t off;
+	reg_t off;
 	uint32_t mask = insnp->mask;
 
 	/*
@@ -671,9 +684,9 @@ static void *do_one_loadstore(uint32_t *p, void *mem, struct ldst_insn *insnp,
 		rt = (ra + 1) % 32;
 
 		/* if RA=R0 the hardware uses 0, so put the base in RB */
-		p = load_64bit_imm(p, rb, (unsigned long)mem);
+		p = load_reg_imm(p, rb, (unsigned long)mem);
 
-		p = load_64bit_imm(p, ra, off);
+		p = load_reg_imm(p, ra, off);
 		insn |= PPC_RT(rt) | PPC_RA(ra) | PPC_RB(rb);
 		mask &= ~0x03fff800;
 	} else if (insnp->form == XL) {
@@ -689,7 +702,7 @@ static void *do_one_loadstore(uint32_t *p, void *mem, struct ldst_insn *insnp,
 		rt = (ra + 1) % 32;
 
 		/* address has to go in RA */
-		p = load_64bit_imm(p, ra, (unsigned long)mem + off);
+		p = load_reg_imm(p, ra, (unsigned long)mem + off);
 
 		/* shift RB left 56 bits */
 		*p++ = RLDICR(rb, rb, 56, 7);
@@ -720,7 +733,7 @@ static void *do_one_loadstore(uint32_t *p, void *mem, struct ldst_insn *insnp,
 			off &= 0xffff;
 			mask &= ~0x03ffffff;
 		}
-		p = load_64bit_imm(p, ra, (unsigned long)mem);
+		p = load_reg_imm(p, ra, (unsigned long)mem);
 
 		insn |= PPC_RT(rt) | PPC_RA(ra) | off;
 	}
@@ -731,7 +744,7 @@ static void *do_one_loadstore(uint32_t *p, void *mem, struct ldst_insn *insnp,
 	}
 
 	if (print_insns)
-		print_insn(insn, insnp->name);
+		print_insn(insn, insnp->name, (unsigned long)p);
 
 	*p++ = insn;
 
@@ -790,12 +803,12 @@ void *generate_testcase(void *ptr, void *mem, void *save, unsigned long seed,
 
 	/* Initialize GPRs */
 	for (unsigned long i = 0; i < 32; i++) {
-		uint64_t val;
+		reg_t val;
 
 		lfsr = mylfsr(32, lfsr);
 
 		val = fxvalues[lfsr % NR_FXVALUES];
-		ptr = load_64bit_imm(ptr, i, val);
+		ptr = load_reg_imm(ptr, i, val);
 	}
 
 	/* Initialize VSCR to 0, and VSRs from the GPRs */
@@ -836,7 +849,7 @@ void *generate_testcase(void *ptr, void *mem, void *save, unsigned long seed,
 			insn = insns[j].opcode | (lfsr & insns[j].mask);
 
 			if (print_insns)
-				print_insn(insn, insns[j].name);
+				print_insn(insn, insns[j].name, (unsigned long)ptr);
 
 			*(uint32_t *)ptr = insn;
 			ptr += sizeof(uint32_t);
@@ -856,22 +869,26 @@ void *generate_testcase(void *ptr, void *mem, void *save, unsigned long seed,
 		 * save area and write the GPRs out. Assume address is in
 		 * the low 32 bits.
 		 */
-		ptr = load_64bit_imm(ptr, 31, (uint64_t)save);
+		ptr = load_reg_imm(ptr, 31, (unsigned long)save);
 
 		p = ptr;
 		/* Save GPR 0-31 to our save area */
-		for (unsigned long i = 0; i < 31; i++)
-			*p++ = STD(i, 31, i*sizeof(uint64_t));
+		for (unsigned long i = 0; i < 31; i++) {
+			if (SIXTYFOUR_INSNS)
+				*p++ = STD(i, 31, i*sizeof(reg_t));
+			else
+				*p++ = STW(i, 31, i * sizeof(reg_t));
+		}
 
 		/* Save VSR0-63, FPSCR, VSCR to our save area */
 		if (VSX_INSNS) {
 			for (j = 0; j < 64; ++j)
-				*p++ = STXV(j, 31, 38 * sizeof(uint64_t) + j * 16);
+				*p++ = STXV(j, 31, 38 * sizeof(reg_t) + j * 16);
 			*p++ = MFFS(0);
-			*p++ = STFD(0, 31, 36 * sizeof(uint64_t));
+			*p++ = STFD(0, 31, 36 * sizeof(reg_t));
 			*p++ = MFVSCR(0);
 			*p++ = MFVSRLD(0, 32);
-			*p++ = STD(0, 31, 37 * sizeof(uint64_t));
+			*p++ = STD(0, 31, 37 * sizeof(reg_t));
 		}
 		ptr = p;
 

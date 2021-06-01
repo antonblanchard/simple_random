@@ -92,10 +92,12 @@ static long run_one_test(unsigned long seed, unsigned long nr_insns,
 		print("\r\n\r\n");
 	} else {
 		uint64_t hash = 0;
+		int ndig = 8;
 
 		if (hash_type == XOR) {
 			for (unsigned long i = 0; i < NGPRS; i++)
 				hash ^= gprs[i];
+			ndig = 2 * sizeof(unsigned long);
 		} else {
 			hash = jhash2((uint32_t *)gprs,
 				      sizeof(gprs)/sizeof(uint32_t), 0);
@@ -103,7 +105,7 @@ static long run_one_test(unsigned long seed, unsigned long nr_insns,
 
 		putlong(seed);
 		print(" ");
-		puthex(hash);
+		puthexn(hash, ndig);
 		print("\r\n");
 	}
 

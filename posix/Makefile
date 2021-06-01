@@ -1,8 +1,10 @@
 ARCH = $(shell uname -m)
+ifneq ("$(ARCH)", "ppc")
 ifneq ("$(ARCH)", "ppc64")
 ifneq ("$(ARCH)", "ppc64le")
 	CROSS_COMPILE ?= powerpc64le-linux-
 	COPTS ?= -mno-vsx -mno-altivec
+endif
 endif
 endif
 
