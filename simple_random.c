@@ -476,6 +476,7 @@ int main(int argc, char *argv[])
 	insns_ptr = init_testcase(MAX_INSNS + SLACK);
 	mem_ptr = init_memory();
 
+#if __STDC_HOSTED__ == 1
 	if (argc == 4 || argc == 3) {
 		unsigned long seed = strtoul(argv[1], NULL, 10);
 		unsigned long nr_insns = strtoul(argv[2], NULL, 10);
@@ -485,7 +486,6 @@ int main(int argc, char *argv[])
 		exit(0);
 	}
 
-#if __STDC_HOSTED__ == 1
 	if (argc == 5 && argv[1][0] == '-') {
 		char *filename = argv[2];
 		unsigned long seed = strtoul(argv[3], NULL, 10);
@@ -504,9 +504,12 @@ int main(int argc, char *argv[])
 #endif
 	microrl_set_sigint_callback(prl, sigint);
 
-	while (1)
-		microrl_insert_char(prl, getchar_unbuffered());
-
+	while (1) {
+		int ch = getchar_unbuffered();
+		if (ch == -1)
+			break;
+		microrl_insert_char(prl, ch);
+	}
 	//free_testcase(ptr);
 
 	return 0;

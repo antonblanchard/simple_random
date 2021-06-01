@@ -114,7 +114,7 @@ void putchar_unbuffered(const char c)
 	putchar(c);
 }
 
-char getchar_unbuffered(void)
+int getchar_unbuffered(void)
 {
 	struct termios oldt, newt;
 	int ch;

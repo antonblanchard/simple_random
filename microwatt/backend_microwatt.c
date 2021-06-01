@@ -45,7 +45,7 @@ long execute_testcase(void *insns, void *gprs, void *mem_ptr)
 	return tb_end - tb_start;
 }
 
-char getchar_unbuffered(void)
+int getchar_unbuffered(void)
 {
 	return getchar();
 }

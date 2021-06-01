@@ -5,7 +5,7 @@ void *init_testcase(unsigned long max_insns);
 void *init_memory(void);
 long execute_testcase(void *insn, void *gprs, void *mem);
 void putchar_unbuffered(const char c);
-char getchar_unbuffered(void);
+int getchar_unbuffered(void);
 
 #define MEMPAGE_BASE (64*1024)
 #define MEMPAGE_SIZE (64*1024)
