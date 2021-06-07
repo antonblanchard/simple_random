@@ -641,6 +641,7 @@ static uint64_t fxvalues[] = {
 #define RLDICR(RA, RS, SH, ME)	(PPC_OPCODE(30) | PPC_RA(RA) | PPC_RS(RS) | PPC_SH(SH) | PPC_ME(ME) | 4)
 #define NOP			0x60000000
 #define MFFS(FRT)		(PPC_OPCODE(63) | PPC_RT(FRT) | (583 << 1))
+#define MTFSF(FRB)		(PPC_OPCODE(63) | (1 << 25) | PPC_RB(FRB) | (711 << 1))
 #define MFVSCR(VRT)		(PPC_OPCODE(4)  | PPC_RT(VRT) | 1540)
 #define MFVSRLD(RA, XS)		(PPC_OPCODE(31) | PPC_XS(XS) | PPC_RA(RA) | (307 << 1) | PPC_SX(XS))
 
@@ -851,6 +852,9 @@ void *generate_testcase(void *ptr, void *mem, void *save, unsigned long seed,
 		/* vxor v0,v0,v0; mtvscr v0 */
 		*p++ = 0x100004c4;
 		*p++ = 0x10000644;
+		/* xxlxor 0,0,0; mtfsf 0,0,1,0 */
+		*p++ = 0xf00004d0;
+		*p++ = MTFSF(0);
 		for (j = 0; j < 64; ++j) {
 			lfsr = mylfsr(32, lfsr);
 			/* generate mtvsrdd instruction from random RA/RB */
