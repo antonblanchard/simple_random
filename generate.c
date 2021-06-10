@@ -119,8 +119,8 @@ static struct insn insns[] = {
 	{ 0x7c000735, 0x03fff800, true, "extsh_rc"},
 	{ 0x7c0007b4, 0x03fff800, SIXTYFOUR_INSNS, "extsw"},
 	{ 0x7c0007b5, 0x03fff800, SIXTYFOUR_INSNS, "extsw_rc"},
-	{ 0x7c0006f4, 0x03fff802, false && SIXTYFOUR_INSNS, "extswsli"},
-	{ 0x7c0006f5, 0x03fff802, false && SIXTYFOUR_INSNS, "extswsli_rc"},
+	{ 0x7c0006f4, 0x03fff802, SIXTYFOUR_INSNS, "extswsli"},
+	{ 0x7c0006f5, 0x03fff802, SIXTYFOUR_INSNS, "extswsli_rc"},
 
 	/* Count leading/trailing zeroes */
 	{ 0x7c000034, 0x03fff800, true, "cntlzw"},
@@ -209,8 +209,8 @@ static struct insn insns[] = {
 	{ 0x2c000000, 0x03ffffff, true, "cmpi"},
 	{ 0x7c000040, 0x03fff801, true, "cmpl"},
 	{ 0x28000000, 0x03ffffff, true, "cmpli"},
-	{ 0x7c000180, 0x03fff801, false, "cmprb"},
-	{ 0x7c0001c0, 0x03fff801, false, "cmpeqb"},
+	{ 0x7c000180, 0x03fff801, true, "cmprb"},
+	{ 0x7c0001c0, 0x03fff801, true, "cmpeqb"},
 
 	/* CR ops */
 	{ 0x4c000000, 0x03fff801, true, "mcrf"},
@@ -224,7 +224,8 @@ static struct insn insns[] = {
 	{ 0x7c04001e, 0x03fbffc1, true, "isel"},
 	{ 0x7c02001e, 0x03fdffc1, true, "isel"},
 	{ 0x7c01001e, 0x03feffc1, true, "isel"},
-	{ 0x7c000100, 0x03fff801, false, "setb"},
+	{ 0x7c000100, 0x03fff801, true, "setb"},
+	{ 0x7c000480, 0x03fff801, true, "mcrxrx"},
 
 	/* BC+8 */
 	{ 0x40000008, 0x03ff0001, true, "bc"},
@@ -285,7 +286,8 @@ static struct insn insns[] = {
 
 	/* Other misc ops */
 	{ 0x7c0003f8, 0x03fff801, true, "cmpb"},
-	{ 0x7c0001f8, 0x03fff801, false && SIXTYFOUR_INSNS, "bpermd"},
+	{ 0x7c0001f8, 0x03fff801, SIXTYFOUR_INSNS, "bpermd"},
+	{ 0x4c000004, 0x03ffffc1, true, "addpcis" },
 
 	/* Cache control ops */
 	{ 0x7c0007ac, 0x03fff801, false, "icbi"},
@@ -402,6 +404,12 @@ static struct insn insns[] = {
 	{ 0x1000000e, 0x03fff800, VECTOR_INSNS, "vpkuhum" },
 	{ 0x1000004e, 0x03fff800, VECTOR_INSNS, "vpkuwum" },
 	{ 0x1000044e, 0x03fff800, VECTOR_INSNS, "vpkudum" },
+	{ 0x1000020e, 0x03fff800, VECTOR_INSNS, "vupkhsb" },
+	{ 0x1000028e, 0x03fff800, VECTOR_INSNS, "vupklsb" },
+	{ 0x1000024e, 0x03fff800, VECTOR_INSNS, "vupkhsh" },
+	{ 0x100002ce, 0x03fff800, VECTOR_INSNS, "vupklsh" },
+	{ 0x1000064e, 0x03fff800, VECTOR_INSNS, "vupkhsw" },
+	{ 0x100006ce, 0x03fff800, VECTOR_INSNS, "vupklsw" },
 	{ 0x1000002a, 0x03ffffc0, VECTOR_INSNS, "vsel" },
 	{ 0x1000002b, 0x03ffffc0, VECTOR_INSNS, "vperm" },
 	{ 0x1000002c, 0x03ffffc0, VECTOR_INSNS, "vsldoi" },
@@ -450,8 +458,14 @@ static struct insn insns[] = {
 	{ 0xf0000510, 0x03fff807, VSX_INSNS, "xxlnor" },
 	{ 0xf0000490, 0x03fff807, VSX_INSNS, "xxlor" },
 	{ 0xf00004d0, 0x03fff807, VSX_INSNS, "xxlxor" },
+	{ 0xf0000010, 0x03fffb07, VSX_INSNS, "xxsldwi" },
 	{ 0xf0000050, 0x03fffb07, VSX_INSNS, "xxpermdi" },
+	{ 0xf0000090, 0x03fff803, VSX_INSNS, "xxmrghw" },
+	{ 0xf0000190, 0x03fff803, VSX_INSNS, "xxmrglw" },
+	{ 0xf0000290, 0x03fff803, VSX_INSNS, "xxspltw" },
 	{ 0xf0000464, 0x03fff803, VSX_INSNS, "xsrsp" },
+	{ 0xf00000d0, 0x03fff803, VSX_INSNS, "xxperm" },
+	{ 0xf00001d0, 0x03fff803, VSX_INSNS, "xxpermr" },
 	{ 0xf0000030, 0x03ffffcf, VSX_INSNS, "xxsel" },
 	{ 0x7c000066, 0x3ffff801, VSX_INSNS, "mfvsrd" },
 	{ 0x7c000266, 0x3ffff801, VSX_INSNS, "mfvsrld" },
