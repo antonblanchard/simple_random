@@ -101,6 +101,7 @@ static long run_one_test(unsigned long seed, unsigned long nr_insns,
 		} else {
 			hash = jhash2((uint32_t *)gprs,
 				      sizeof(gprs)/sizeof(uint32_t), 0);
+			hash = jhash2(mem_ptr, MEM_SIZE / sizeof(uint32_t), hash);
 		}
 
 		putlong(seed);
