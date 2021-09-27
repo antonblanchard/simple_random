@@ -1,7 +1,7 @@
 SECTIONS
 {
 	. = 0;
-	_start = .;
+	start = .;
 	.head : {
 		KEEP(*(.head))
 	}

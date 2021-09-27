@@ -17,7 +17,7 @@ void *memcpy(void *dest, const void *src, size_t n);
 void *memcpy(void *dest, const void *src, size_t n)
 {
 	void *ret = dest;
-#if 0
+#if 1
 	while (n >= 8) {
 		*(uint64_t *)dest = *(uint64_t *)src;
 		dest += 8;
