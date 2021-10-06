@@ -13,12 +13,6 @@
 #include <stdio.h>
 #endif
 
-#ifdef __powerpc64__
-#define SIXTYFOUR_INSNS	true
-#else
-#define SIXTYFOUR_INSNS	false
-#endif
-
 #define OVERFLOW_INSNS	true
 #define DIVIDE_INSNS	true
 #define CARRY_INSNS	true
@@ -26,8 +20,7 @@
 #define LDST_UPDATE	true
 #define CRLOGICAL_INSNS true
 #define MTFXER_INSNS	true
-#define VECTOR_INSNS	false
-#define VSX_INSNS	(false && SIXTYFOUR_INSNS)
+#define VSX_INSNS	(VECTOR_INSNS && SIXTYFOUR_INSNS)
 #define STCOND_INSNS	false
 
 struct insn {

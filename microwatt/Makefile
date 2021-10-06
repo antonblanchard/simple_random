@@ -8,6 +8,11 @@ endif
 
 MICROWATT = ../..
 
+CDEFS=
+
+# Uncomment the next line to include vector/VSX instructions
+#CDEFS += -DVECTOR_INSNS=true
+
 CC = $(CROSS_COMPILE)gcc
 LD = $(CROSS_COMPILE)ld
 OBJCOPY = $(CROSS_COMPILE)objcopy
@@ -16,7 +21,7 @@ GIT_VERSION := "$(shell git describe --dirty --always --tags)"
 
 #CFLAGS_TARGET = -mbig-endian -m32
 
-CFLAGS = -DVERSION=\"$(GIT_VERSION)\" -Os -g -Wall $(CFLAGS_TARGET) -msoft-float -mno-string -mno-multiple -mno-vsx -mno-altivec -mtraceback=no -fno-stack-protector -mstrict-align -ffreestanding -fdata-sections -ffunction-sections  -Ilibc/include -I../ -I../microrl -I$(MICROWATT)/include -D__USE_LIBC
+CFLAGS = $(CDEFS) -DVERSION=\"$(GIT_VERSION)\" -Os -g -Wall $(CFLAGS_TARGET) -msoft-float -mno-string -mno-multiple -mno-vsx -mno-altivec -mtraceback=no -fno-stack-protector -mstrict-align -ffreestanding -fdata-sections -ffunction-sections  -Ilibc/include -I../ -I../microrl -I$(MICROWATT)/include -D__USE_LIBC
 ASFLAGS = $(CFLAGS)
 LDFLAGS = -N -T powerpc.lds --gc-sections
 

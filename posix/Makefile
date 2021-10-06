@@ -8,12 +8,17 @@ endif
 endif
 endif
 
+CDEFS=
+
+# Uncomment the next line to include vector/VSX instructions
+#CDEFS += -DVECTOR_INSNS=true
+
 CC = $(CROSS_COMPILE)gcc
 LD = $(CROSS_COMPILE)ld
 
 GIT_VERSION := "$(shell git describe --dirty --always --tags)"
 
-CFLAGS = -DVERSION=\"$(GIT_VERSION)\" -O2 -g -Wall -I../ -I../microrl $(COPTS)
+CFLAGS = $(CDEFS) -DVERSION=\"$(GIT_VERSION)\" -O2 -g -Wall -I../ -I../microrl $(COPTS)
 ASFLAGS = $(CFLAGS)
 
 all: simple_random

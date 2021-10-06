@@ -3,8 +3,4 @@ void *generate_testcase(void *ptr, void *mem, void *save, unsigned long seed, un
 void enable_insn(const char *insn);
 void disable_insn(const char *insn);
 
-#if 1
 typedef unsigned long reg_t;
-#else
-typedef unsigned int reg_t;
-#endif

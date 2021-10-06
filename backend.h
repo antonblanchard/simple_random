@@ -15,4 +15,18 @@ int getchar_unbuffered(void);
 #define MEM_BASE (112*1024)
 #define MEM_SIZE 1024
 
+#ifndef VECTOR_INSNS
+#define VECTOR_INSNS	false
+#endif
+
+#ifdef __powerpc64__
+#define SIXTYFOUR_INSNS	true
+#else
+#define SIXTYFOUR_INSNS	false
+#endif
+
+#if VECTOR_INSNS
+#define NGPRS	(36+128)
+#else
 #define NGPRS	(36)
+#endif
