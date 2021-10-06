@@ -1,0 +1,254 @@
+#!/usr/bin/expect
+
+proc test {seed n sid} {
+    global spawn_id
+    set spawn_id $sid
+    send "test $seed $n\r"
+    expect -re {test.*\n([0-9]+) ([0-9a-f]+)\r}
+    set s $expect_out(1,string)
+    set h $expect_out(2,string)
+    if {$s != $seed} {
+	puts -error "oops, didn't expect '$expect_out(0,string)'"
+	exit
+    }
+    return $h
+}
+
+proc testri {seed n sid regs {insns {}}} {
+    global spawn_id
+    global $regs
+    global sprs do_vector
+
+    set spawn_id $sid
+    if {$insns ne {}} {
+	global $insns
+	expect "microwatt >"
+	send "set insns 1\r"
+	expect "set insns 1"
+    }
+    expect "microwatt >"
+    send "set registers 1\r"
+    expect "set registers 1"
+    expect "microwatt >"
+    send "test $seed $n\r"
+    expect "test $seed $n"
+    if {$insns ne {} && $n > 0} {
+	expect "test $seed $n" exp_continue -re {[0-9a-z_,@ ]+\r}
+	set $insns [list [string trim $expect_out(0,string)]]
+	for {set i 1} {$i < $n} {incr i} {
+	    expect -re {[0-9a-z_,@ ]+\r}
+	    lappend $insns [string trim $expect_out(0,string)]
+	}
+    }
+    # cope with the test command coming back again
+    expect "test $seed $n" exp_continue -re {0 ([0-9a-f]+)}
+    set v $expect_out(1,string)
+    set ${regs}(0) $v
+    for {set i 1} {$i < 31} {incr i} {
+	expect -re "$i (\[0-9a-f]+)\r"
+	set v $expect_out(1,string)
+	set ${regs}($i) $v
+    }
+    expect "31"
+    foreach i $sprs {
+	expect -re "$i (\[0-9a-f]+)\r"
+	set v $expect_out(1,string)
+	set ${regs}($i) $v
+    }
+    if {$do_vector} {
+	for {set i 0} {$i < 32} {incr i} {
+	    expect -re "F$i (\[0-9a-f]+ \[0-9a-f]+)\r"
+	    set v $expect_out(1,string)
+	    set ${regs}(F$i) $v
+	}
+	for {set i 0} {$i < 32} {incr i} {
+	    expect -re "V$i (\[0-9a-f]+ \[0-9a-f]+)\r"
+	    set v $expect_out(1,string)
+	    set ${regs}(V$i) $v
+	}
+    }
+    expect -re {Memory @ ([0-9a-f]+)}
+    set mem {}
+    for {set i 0} {$i < 32} {incr i} {
+	expect -re {([0-9a-f]+) ([0-9a-f]+) ([0-9a-f]+) ([0-9a-f]+)\r}
+	lappend mem $expect_out(1,string)
+	lappend mem $expect_out(2,string)
+	lappend mem $expect_out(3,string)
+	lappend mem $expect_out(4,string)
+    }
+    set ${regs}(mem) $mem
+    if {$insns ne {}} {
+	expect "microwatt >"
+	send "set insns 0\r"
+	expect "set insns 0"
+    }
+    if {$regs ne {}} {
+	expect "microwatt >"
+	send "set registers 0\r"
+	expect "set registers 0"
+    }
+}
+
+proc do_bisect {sr1 sr2 seed insns} {
+    set lo 0
+    set hi $insns
+    while {$hi > $lo + 1} {
+	set mid [expr {($lo + $hi) / 2}]
+	puts "Testing $mid"
+	set h1 [test $seed $mid $sr1]
+	set h2 [test $seed $mid $sr2]
+	if {$h1 eq $h2} {
+	    set lo $mid
+	} else {
+	    set hi $mid
+	}
+    }
+    return $hi
+}
+
+proc opencmddev {cmd} {
+    if {[string match "/dev/*" $cmd]} {
+	puts "Opening $cmd"
+	if {[catch {
+	    set sp [open $cmd r+]
+	} err]} {
+	    puts stderr "Couldn't open device $cmd: $err"
+	    exit 1
+	}
+	fconfigure $sp -mode 115200,n,8,1
+	stty raw -echo < $cmd
+	spawn -open $sp
+	set id $spawn_id
+	send "\r"
+	expect "microwatt >"
+	send "set insns 0\r"
+	expect -re {set.*\n}
+	expect "microwatt >"
+	send "set registers 0\r"
+	expect -re {set.*\n}
+    } else {
+	eval spawn $cmd
+	set id $spawn_id
+	expect "microwatt >"
+    }
+    puts ""
+    send "\r"
+    return $id
+}
+
+set seed_min 0
+set count 1000
+set insns 8000
+
+set sprs {CR LR CTR XER}
+set do_vector false
+
+proc usage {} {
+    puts stderr "Usage: sr_bisect \[-s seed\] \[-c count\] \[-n insns\] cmd/dev1 cmd/dev2"
+    exit 1
+}
+
+set cmd1 {}
+set cmd2 {}
+for {set i 0} {$i < [llength $argv]} {incr i} {
+    set arg [lindex $argv $i]
+    if {[string index $arg 0] eq "-"} {
+	switch $arg {
+	    "-s" -
+	    "--seed" {
+		if {[incr i] >= [llength $argv]} usage
+		set seed_min [lindex $argv $i]
+	    }
+	    "-c" -
+	    "--count" {
+		if {[incr i] >= [llength $argv]} usage
+		set count [lindex $argv $i]
+	    }
+	    "-n" -
+	    "--insns" {
+		if {[incr i] >= [llength $argv]} usage
+		set insns [lindex $argv $i]
+	    }
+	    "-v" -
+	    "--vector" {
+		if {[incr i] >= [llength $argv]} usage
+		set do_vector [lindex $argv $i]
+	    }
+	    default {
+		usage
+	    }
+	}
+    } elseif {$arg ne {}} {
+	if {$cmd1 eq {}} {
+	    set cmd1 $arg
+	} elseif {$cmd2 eq {}} {
+	    set cmd2 $arg
+	} else {
+	    usage
+	}
+    } else {
+	usage
+    }
+}
+
+if {$cmd1 eq {} || $cmd2 eq {}} usage
+
+if {$do_vector} {
+    lappend sprs FPSCR VSCR
+}
+
+set rnames {}
+for {set r 0} {$r < 31} {incr r} {
+    lappend rnames $r
+}
+set rnames [concat $rnames $sprs]
+if {$do_vector} {
+    for {set r 0} {$r < 31} {incr r} {
+	lappend rnames F$r
+    }
+    for {set r 0} {$r < 31} {incr r} {
+	lappend rnames V$r
+    }
+}
+
+set sr1 [opencmddev $cmd1]
+set sr2 [opencmddev $cmd2]
+
+log_user 0
+
+set ok true
+for {set seed $seed_min} {$seed < $seed_min + $count} {incr seed} {
+    puts "seed=$seed"
+    set h1 [test $seed $insns $sr1]
+    set h2 [test $seed $insns $sr2]
+    if {$h1 ne $h2} {
+	set ok false
+	break
+    }
+}
+
+if {!$ok} {
+    puts "Seed $seed different; bisecting ($h1 vs $h2)"
+    set hi [do_bisect $sr1 $sr2 $seed $insns]
+    puts "Differ at $hi"
+    testri $seed $hi $sr1 ssh_regs instrs
+    testri $seed $hi $sr2 tty_regs
+    foreach r $rnames {
+	puts -nonewline "$r $ssh_regs($r) $tty_regs($r)"
+	if {$ssh_regs($r) ne $tty_regs($r)} {
+	    puts -nonewline " ****"
+	}
+	puts ""
+    }
+    if {$ssh_regs(mem) ne $tty_regs(mem)} {
+	puts "Memory differs"
+    }
+    set i [expr {[llength $instrs] - 10}]
+    if {$i < 0} {set i 0}
+    set n [expr {[llength $instrs] - $i}]
+    puts "Last $n instrs:"
+    while {$i < [llength $instrs]} {
+	puts [lindex $instrs $i]
+	incr i
+    }
+}
