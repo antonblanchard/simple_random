@@ -114,11 +114,12 @@ void putchar_unbuffered(const char c)
 	putchar(c);
 }
 
-char getchar_unbuffered(void)
+int getchar_unbuffered(void)
 {
 	struct termios oldt, newt;
 	int ch;
 
+	fflush(stdout);
 	tcgetattr(STDIN_FILENO, &oldt);
 	newt = oldt;
 	newt.c_lflag &= ~(ICANON | ECHO);

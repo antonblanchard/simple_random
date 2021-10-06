@@ -2,8 +2,16 @@ ARCH = $(shell uname -m)
 ifneq ("$(ARCH)", "ppc64")
 ifneq ("$(ARCH)", "ppc64le")
 	CROSS_COMPILE ?= powerpc64le-linux-
+	COPTS ?= -mno-vsx -mno-altivec
 endif
 endif
+
+MICROWATT = ../..
+
+CDEFS=
+
+# Uncomment the next line to include vector/VSX instructions
+#CDEFS += -DVECTOR_INSNS=true
 
 CC = $(CROSS_COMPILE)gcc
 LD = $(CROSS_COMPILE)ld
@@ -11,7 +19,9 @@ OBJCOPY = $(CROSS_COMPILE)objcopy
 
 GIT_VERSION := "$(shell git describe --dirty --always --tags)"
 
-CFLAGS = -DVERSION=\"$(GIT_VERSION)\" -Os -g -Wall -msoft-float -mno-string -mno-multiple -mno-vsx -mno-altivec -mlittle-endian -mtraceback=no -fno-stack-protector -mstrict-align -ffreestanding -fdata-sections -ffunction-sections  -Ilibc/include -I../ -I../microrl
+#CFLAGS_TARGET = -mbig-endian -m32
+
+CFLAGS = $(CDEFS) -DVERSION=\"$(GIT_VERSION)\" -Os -g -Wall $(CFLAGS_TARGET) -msoft-float -mno-string -mno-multiple -mno-vsx -mno-altivec -mtraceback=no -fno-stack-protector -mstrict-align -ffreestanding -fdata-sections -ffunction-sections  -Ilibc/include -I../ -I../microrl -I$(MICROWATT)/include -D__USE_LIBC
 ASFLAGS = $(CFLAGS)
 LDFLAGS = -N -T powerpc.lds --gc-sections
 
@@ -29,9 +39,6 @@ libc.o: libc_objdir $(LIBC_OBJ)
 simple_random.o: ../simple_random.c ../generate.h ../backend.h ../jenkins.h ../microrl/microrl.h ../mystdio.h
 	$(CC) $(CFLAGS) -c $<
 
-lfsr.o: ../lfsr.c
-	$(CC) $(CFLAGS) -c $<
-
 generate.o: ../generate.c ../generate.h ../lfsr.h ../helpers.h
 	$(CC) $(CFLAGS) -c $<
 
@@ -44,7 +51,10 @@ mystdio.o: ../mystdio.c ../mystdio.h
 microrl.o: ../microrl/microrl.c ../microrl/config.h ../microrl/microrl.h
 	$(CC) $(CFLAGS) -c $<
 
-simple_random.elf: simple_random.o lfsr.o generate.o head.o libc.o uart.o backend_microwatt.o helpers.o microrl.o mystdio.o
+console.o: $(MICROWATT)/lib/console.c
+	$(CC) $(CFLAGS) -c $<
+
+simple_random.elf: simple_random.o generate.o head.o libc.o console.o backend_microwatt.o helpers.o microrl.o mystdio.o
 	$(LD) $(LDFLAGS) -o $@ $^
 
 simple_random.bin: simple_random.elf

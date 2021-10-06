@@ -1,11 +1,11 @@
 #include <string.h>
 #include <stdint.h>
 #include "backend.h"
-#include "stdio.h"
+#include "mystdio.h"
 
-void puthex(uint64_t n)
+void puthexn(uint64_t n, int ndigits)
 {
-	for (long i = 15; i >= 0; i--) {
+	for (long i = ndigits - 1; i >= 0; i--) {
 		uint8_t x = (n >> (i*4)) & 0xf;
 
 		if (x > 9)
@@ -13,6 +13,11 @@ void puthex(uint64_t n)
 		else
 			putchar_unbuffered(x+'0');
 	}
+}
+
+void puthex(uint64_t n)
+{
+	puthexn(n, 16);
 }
 
 void putlong(uint64_t n)

@@ -33,9 +33,10 @@ static enum { JENKINS, XOR } hash_type = JENKINS;
 static void *insns_ptr;
 static void *mem_ptr;
 
-static const char *extra_names[4] = { "CR", "LR", "CTR", "XER" };
+static const char *extra_names[6] = { "CR", "LR", "CTR", "XER", "FPSCR", "VSCR" };
 
-static long run_one_test(unsigned long seed, unsigned long nr_insns)
+static long run_one_test(unsigned long seed, unsigned long nr_insns,
+			 unsigned long *lenp)
 {
 	unsigned long gprs[NGPRS];
 	long tb_diff;
@@ -46,7 +47,7 @@ static long run_one_test(unsigned long seed, unsigned long nr_insns)
 	}
 
 	generate_testcase(insns_ptr, mem_ptr+MEM_SIZE/2, gprs, seed, nr_insns,
-			  insns, false);
+			  insns, false, lenp);
 	tb_diff = execute_testcase(insns_ptr, gprs, mem_ptr);
 
 	/* GPR 31 was our scratch space, clear it */
@@ -54,13 +55,28 @@ static long run_one_test(unsigned long seed, unsigned long nr_insns)
 
 	if (registers) {
 		for (unsigned long i = 0; i < NGPRS; i++) {
-			if (i < 32)
-				putlong(i);
-			else
-				print(extra_names[i-32]);
-			print(" ");
-			if (i != 31)
+			if (i < 38) {
+				if (i < 32)
+					putlong(i);
+				else
+					print(extra_names[i-32]);
+				print(" ");
+				if (i != 31)
+					puthex(gprs[i]);
+			} else {
+				if (i < 102) {
+					print("F");
+					putlong((i - 38) >> 1);
+				} else {
+					print("V");
+					putlong((i - 102) >> 1);
+				}
+				print(" ");
+				puthex(gprs[i+1]);
+				print(" ");
 				puthex(gprs[i]);
+				++i;
+			}
 			print("\r\n");
 		}
 		print("Memory @ ");
@@ -76,18 +92,21 @@ static long run_one_test(unsigned long seed, unsigned long nr_insns)
 		print("\r\n\r\n");
 	} else {
 		uint64_t hash = 0;
+		int ndig = 8;
 
 		if (hash_type == XOR) {
 			for (unsigned long i = 0; i < NGPRS; i++)
 				hash ^= gprs[i];
+			ndig = 2 * sizeof(unsigned long);
 		} else {
 			hash = jhash2((uint32_t *)gprs,
 				      sizeof(gprs)/sizeof(uint32_t), 0);
+			hash = jhash2(mem_ptr, MEM_SIZE / sizeof(uint32_t), hash);
 		}
 
 		putlong(seed);
 		print(" ");
-		puthex(hash);
+		puthexn(hash, ndig);
 		print("\r\n");
 	}
 
@@ -98,13 +117,16 @@ static void run_many_tests(unsigned long seed, unsigned long nr_insns,
 			   unsigned long nr_tests)
 {
 	long tb_ticks = 0;
+	unsigned long total_bytes = 0;
 
 	for (unsigned long i = 0; i < nr_tests; i++) {
-		tb_ticks += run_one_test(seed, nr_insns);
+		tb_ticks += run_one_test(seed, nr_insns, &total_bytes);
 		seed++;
 	}
 	print("timebase delta = ");
 	putlong(tb_ticks);
+	print(", # instructions = ");
+	putlong(total_bytes / 4);
 	print("\r\n");
 }
 
@@ -131,7 +153,7 @@ static void non_interactive(char *filename, unsigned long seed,
 		return;
 	}
 
-	end = generate_testcase(insns_ptr, mem_ptr+MEM_SIZE/2, gprs,seed, nr_insns, insns, true);
+	end = generate_testcase(insns_ptr, mem_ptr+MEM_SIZE/2, gprs,seed, nr_insns, insns, true, NULL);
 
 	sprintf(name, "%s.bin", filename);
 
@@ -152,7 +174,7 @@ static void non_interactive(char *filename, unsigned long seed,
 	close(fd);
 
 	generate_testcase(insns_ptr, mem_ptr+MEM_SIZE/2, gprs, seed, nr_insns,
-			  insns, false);
+			  insns, false, NULL);
 	execute_testcase(insns_ptr, gprs, mem_ptr);
 
 	/* GPR 31 was our scratch space, clear it */
@@ -396,7 +418,7 @@ static int execute(microrl_t *pThis, int argc, const char *const *argv)
 		seed = __atoi(argv[1], 10);
 		nr_insns = __atoi(argv[2], 10);
 
-		run_one_test(seed, nr_insns);
+		run_one_test(seed, nr_insns, NULL);
 
 	} else if (!strcmp(argv[0], _CMD_TEST_MANY)) {
 		unsigned long seed;
@@ -454,21 +476,23 @@ int main(int argc, char *argv[])
 {
 	init_console();
 
-	microrl_init(prl, microrl_print);
-	microrl_set_execute_callback(prl, execute);
-#ifdef _USE_COMPLETE
-	microrl_set_complete_callback (prl, microrl_complete);
-#endif
-	microrl_set_sigint_callback(prl, sigint);
-
 	insns_ptr = init_testcase(MAX_INSNS + SLACK);
 	mem_ptr = init_memory();
 
 #if __STDC_HOSTED__ == 1
-	if (argc == 4) {
-		char *filename = argv[1];
-		unsigned long seed = strtoul(argv[2], NULL, 10);
-		unsigned long nr_insns = strtoul(argv[3], NULL, 10);
+	if (argc == 4 || argc == 3) {
+		unsigned long seed = strtoul(argv[1], NULL, 10);
+		unsigned long nr_insns = strtoul(argv[2], NULL, 10);
+		unsigned long nr_tests = argc > 3? strtoul(argv[3], NULL, 10): 1;
+
+		run_many_tests(seed, nr_insns, nr_tests);
+		exit(0);
+	}
+
+	if (argc == 5 && argv[1][0] == '-') {
+		char *filename = argv[2];
+		unsigned long seed = strtoul(argv[3], NULL, 10);
+		unsigned long nr_insns = strtoul(argv[4], NULL, 10);
 
 		non_interactive(filename, seed, nr_insns);
 
@@ -476,9 +500,19 @@ int main(int argc, char *argv[])
 	}
 #endif
 
-	while (1)
-		microrl_insert_char(prl, getchar_unbuffered());
+	microrl_init(prl, microrl_print);
+	microrl_set_execute_callback(prl, execute);
+#ifdef _USE_COMPLETE
+	microrl_set_complete_callback (prl, microrl_complete);
+#endif
+	microrl_set_sigint_callback(prl, sigint);
 
+	while (1) {
+		int ch = getchar_unbuffered();
+		if (ch == -1)
+			break;
+		microrl_insert_char(prl, ch);
+	}
 	//free_testcase(ptr);
 
 	return 0;

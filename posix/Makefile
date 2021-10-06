@@ -1,24 +1,29 @@
 ARCH = $(shell uname -m)
+ifneq ("$(ARCH)", "ppc")
 ifneq ("$(ARCH)", "ppc64")
 ifneq ("$(ARCH)", "ppc64le")
 	CROSS_COMPILE ?= powerpc64le-linux-
+	COPTS ?= -mno-vsx -mno-altivec
 endif
 endif
+endif
+
+CDEFS=
+
+# Uncomment the next line to include vector/VSX instructions
+#CDEFS += -DVECTOR_INSNS=true
 
 CC = $(CROSS_COMPILE)gcc
 LD = $(CROSS_COMPILE)ld
 
 GIT_VERSION := "$(shell git describe --dirty --always --tags)"
 
-CFLAGS = -DVERSION=\"$(GIT_VERSION)\" -O2 -g -Wall -I../ -I../microrl
+CFLAGS = $(CDEFS) -DVERSION=\"$(GIT_VERSION)\" -O2 -g -Wall -I../ -I../microrl $(COPTS)
 ASFLAGS = $(CFLAGS)
 
 all: simple_random
 
 simple_random.o: ../simple_random.c ../generate.h ../backend.h ../jenkins.h ../microrl/microrl.h ../mystdio.h
-	$(CC) $(CFLAGS) -c $<
-
-lfsr.o: ../lfsr.c
 	$(CC) $(CFLAGS) -c $<
 
 generate.o: ../generate.c ../generate.h ../lfsr.h ../helpers.h
@@ -35,7 +40,7 @@ microrl.o: ../microrl/microrl.c ../microrl/config.h ../microrl/microrl.h
 
 backend_posix.o: backend_posix.c ../backend.h
 
-simple_random: simple_random.o lfsr.o generate.o backend_posix.o helpers.o microrl.o mystdio.o
+simple_random: simple_random.o generate.o backend_posix.o helpers.o microrl.o mystdio.o
 	$(CC) $(LDFLAGS) -o $@ $^
 
 clean:
