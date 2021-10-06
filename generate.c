@@ -26,8 +26,8 @@
 #define LDST_UPDATE	true
 #define CRLOGICAL_INSNS true
 #define MTFXER_INSNS	true
-#define VECTOR_INSNS	true
-#define VSX_INSNS	(true && SIXTYFOUR_INSNS)
+#define VECTOR_INSNS	false
+#define VSX_INSNS	(false && SIXTYFOUR_INSNS)
 #define STCOND_INSNS	false
 
 struct insn {

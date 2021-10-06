@@ -15,4 +15,4 @@ int getchar_unbuffered(void);
 #define MEM_BASE (112*1024)
 #define MEM_SIZE 1024
 
-#define NGPRS	(38+128)
+#define NGPRS	(36)
